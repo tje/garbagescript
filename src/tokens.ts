@@ -14,6 +14,7 @@ export enum Token {
   LessEqual = 'LTE',
   Not = 'NOT',
 
+  Let = 'LET',
   Assign = 'ASSIGN',
   PlusEquals = 'PLUS_EQ',
   MinusEquals = 'MINUS_EQ',
@@ -30,6 +31,8 @@ export enum Token {
 
   EOL = 'EOL',
   EOF = 'EOF',
+
+  Print = 'PRINT',
 }
 
 export const MATCHER = {
@@ -54,8 +57,11 @@ export const MATCHER = {
   [Token.CurlyRight]: /^\}/,
   [Token.ParenLeft]: /^\(/,
   [Token.ParenRight]: /^\)/,
+  [Token.Let]: /^let\b/,
   [Token.Identifier]: /^\$[a-zA-Z_\d]+/,
   [Token.NumberLiteral]: /^[\d]+[\d_]*(\.[\d_]*)?/,
   [Token.StringLiteral]: /^"(?:[^\\"]|\\(?:[bfnrtv"\\/]|u[0-9a-fA-F]{4}))*"/,
   [Token.BoolLiteral]: /^true|false/,
+
+  [Token.Print]: /^print/,
 }

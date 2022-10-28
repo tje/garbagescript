@@ -11,7 +11,55 @@ class Parser {
   }
 
   public parse () {
-    return this.parseExpression()
+    return this.parseProgram()
+  }
+
+  private parseProgram (): IASTNode {
+    const statements: IASTNode[] = []
+
+    while (!this.isAtEnd()) {
+      statements.push(this.parseStatement())
+    }
+    return {
+      type: NodeType.StatementList,
+      value: statements,
+    }
+  }
+
+  private parseStatement (): IASTNode {
+    if (this.match(Token.Let)) {
+      return this.parseAssignStatement()
+    }
+    if (this.match(Token.Print)) {
+      return this.parsePrintStatement()
+    }
+    return this.parseExpressionStatement()
+  }
+  private parseAssignStatement (): IASTNode {
+    const name = this.consume(Token.Identifier, 'Expected identifier')
+    this.consume(Token.Assign, 'Expected initializer')
+    const value = this.parseExpression()
+    this.consume(Token.EOL, 'Expected EOL')
+    return {
+      type: NodeType.AssignStatement,
+      value: [ name, value, true ],
+    }
+  }
+  private parsePrintStatement (): IASTNode {
+    const value = this.parseExpression()
+    this.consume(Token.EOL, 'No EOL')
+    return {
+      type: NodeType.PrintStatement,
+      value,
+    }
+  }
+  private parseExpressionStatement (): IASTNode {
+    const value = this.parseExpression()
+    this.consume(Token.EOL, 'No EOL')
+    return {
+      type: NodeType.ExprStatement,
+      value,
+    }
   }
 
 
@@ -105,6 +153,13 @@ class Parser {
         value: t.substring(1, t.length - 1),
       }
     }
+    if (this.match(Token.Identifier)) {
+      const value = this.previous().lexeme
+      return {
+        type: NodeType.Variable,
+        value,
+      }
+    }
 
     if (this.match(Token.ParenLeft)) {
       const expr = this.parseExpression()
@@ -173,11 +228,21 @@ export enum NodeType {
   BinaryExpr,
   UnaryExpr,
   Grouping,
+  Variable,
+
+  StatementList,
+  ExprStatement,
+  PrintStatement,
+  AssignStatement,
 }
 
 type IASTNodeLiteral = {
   type: NodeType.Literal
   value: string | number | boolean
+}
+type IASTNodeVariable = {
+  type: NodeType.Variable
+  value: string
 }
 type IASTNodeUnary = {
   type: NodeType.UnaryExpr
@@ -191,40 +256,21 @@ type IASTNodeGrouping = {
   type: NodeType.Grouping
   value: IASTNode
 }
-type IASTNode = IASTNodeLiteral | IASTNodeUnary | IASTNodeBinary | IASTNodeGrouping
-
-export const interpretAst = (node: IASTNode) => resolveAstNode(node)
-export const resolveAstNode = (node: IASTNode): any => {
-  switch (node.type) {
-    case NodeType.Literal: return node.value
-    case NodeType.UnaryExpr: {
-      const op = node.value[0]
-      const ex = resolveAstNode(node.value[1])
-      if (op.type === Token.Not) {
-        return !ex
-      } else if (op.type === Token.Minus) {
-        return ex * -1
-      }
-      throw new Error(`Unknown unary operator: "${op.lexeme}"`)
-    }
-    case NodeType.BinaryExpr: {
-      const op = node.value[1]
-      const left = resolveAstNode(node.value[0])
-      const right = resolveAstNode(node.value[2])
-      switch (op.type) {
-        case Token.Plus: return left + right
-        case Token.Minus: return left - right
-        case Token.Multiply: return left * right
-        case Token.Divide: return left / right
-        case Token.Greater: return left > right
-        case Token.GreaterEqual: return left >= right
-        case Token.Less: return left < right
-        case Token.LessEqual: return left <= right
-        case Token.Equals: return left == right
-        case Token.NotEquals: return left != right
-      }
-      throw new Error(`Unknown binary operator: "${op.lexeme}"`)
-    }
-    case NodeType.Grouping: return resolveAstNode(node.value)
-  }
+type IASTNodePrintStatement = {
+  type: NodeType.PrintStatement
+  value: IASTNode
 }
+type IASTNodeExprStatement = {
+  type: NodeType.ExprStatement
+  value: IASTNode
+}
+type IASTNodeStatementList = {
+  type: NodeType.StatementList
+  value: IASTNode[]
+}
+type IASTNodeAssignStatement = {
+  type: NodeType.AssignStatement
+  value: [ IToken, IASTNode, boolean ]
+}
+export type IASTNode = IASTNodeLiteral | IASTNodeVariable | IASTNodeUnary | IASTNodeBinary | IASTNodeGrouping
+  | IASTNodePrintStatement | IASTNodeExprStatement | IASTNodeStatementList | IASTNodeAssignStatement

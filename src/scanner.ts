@@ -48,6 +48,11 @@ export function extractTokens (source: string) {
   }
 
   tokens.push({
+    type: Token.EOL,
+    lexeme: '',
+    offset: position,
+  })
+  tokens.push({
     type: Token.EOF,
     lexeme: '',
     offset: position,
