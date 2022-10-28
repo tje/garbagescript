@@ -53,7 +53,15 @@ export const createInterpreter = () => {
       }
       case NodeType.AssignStatement: {
         const key = node.value[0]
-        const value = resolveAstNode(node.value[1])
+        let value = resolveAstNode(node.value[1])
+        const { type } = node.value[2]
+        const prev = stack.read(key)
+        switch (type) {
+          case Token.PlusEquals: value = prev + value ; break
+          case Token.MinusEquals: value = prev - value ; break
+          case Token.MultiplyEquals: value = prev * value ; break
+          case Token.DivideEquals: value = prev / value ; break
+        }
         stack.write(key, value, { mode: 'update' })
         return value
       }

@@ -68,14 +68,15 @@ class Parser {
   }
   private parseAssignment (): IASTNode {
     const expr = this.parseEquality()
-    if (this.match(Token.Assign)) {
+    if (this.match(Token.Assign, Token.PlusEquals, Token.MinusEquals, Token.MultiplyEquals, Token.DivideEquals)) {
+      const token = this.previous()
       const value = this.parseAssignment()
       if (expr.type !== NodeType.Variable) {
         throw new Error('Invalid assignment')
       }
       return {
         type: NodeType.AssignStatement,
-        value: [ expr.value, value ],
+        value: [ expr.value, value, token ],
       }
     }
     return expr
@@ -285,7 +286,7 @@ type IASTNodeStatementList = {
 }
 type IASTNodeAssignStatement = {
   type: NodeType.AssignStatement
-  value: [ string, IASTNode ]
+  value: [ string, IASTNode, IToken ]
 }
 type IASTNodeDeclareStatement = {
   type: NodeType.DeclareStatement

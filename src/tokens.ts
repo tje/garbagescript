@@ -18,6 +18,8 @@ export enum Token {
   Assign = 'ASSIGN',
   PlusEquals = 'PLUS_EQ',
   MinusEquals = 'MINUS_EQ',
+  MultiplyEquals = 'MULT_EQ',
+  DivideEquals = 'DIV_EQ',
 
   CurlyLeft = 'CURLY_L',
   CurlyRight = 'CURLY_R',
@@ -41,6 +43,8 @@ export const MATCHER = {
   [Token.Comment]: /^\/\/.*?(?=[\r\n])/,
   [Token.PlusEquals]: /^\+=/,
   [Token.MinusEquals]: /^-=/,
+  [Token.MultiplyEquals]: /^\*=/,
+  [Token.DivideEquals]: /^\/=/,
   [Token.Equals]: /^==/,
   [Token.NotEquals]: /^\!=/,
   [Token.GreaterEqual]: /^\>=/,
