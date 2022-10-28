@@ -6,8 +6,13 @@ export const interpretAst = (...nodes: IASTNode[]) => {
   return interpreter.run(...nodes)
 }
 
-export const createInterpreter = () => {
+export const createInterpreter = (subjectData?: { [key: string]: any }) => {
   const stack = createStack()
+  if (subjectData) {
+    for (const [ key, val ] of Object.entries(subjectData)) {
+      stack.write(key, val, { mutable: false })
+    }
+  }
 
   const resolveAstNode = (node: IASTNode): any => {
     switch (node.type) {
