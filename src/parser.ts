@@ -176,6 +176,20 @@ class Parser {
       }
     }
 
+    if (this.match(Token.CurlyLeft)) {
+      const statements: IASTNode[] = []
+      while (!this.match(Token.CurlyRight)) {
+        statements.push(this.parseStatement())
+      }
+      return {
+        type: NodeType.BlockExpr,
+        value: {
+          type: NodeType.StatementList,
+          value: statements,
+        }
+      }
+    }
+
     if (this.match(Token.ParenLeft)) {
       const expr = this.parseExpression()
       this.consume(Token.ParenRight, 'Expected ")" after expression')
@@ -244,6 +258,7 @@ export enum NodeType {
   UnaryExpr,
   Grouping,
   Variable,
+  BlockExpr,
 
   StatementList,
   ExprStatement,
@@ -272,6 +287,10 @@ type IASTNodeGrouping = {
   type: NodeType.Grouping
   value: IASTNode
 }
+type IASTNodeBlockExpression = {
+  type: NodeType.BlockExpr
+  value: IASTNodeStatementList
+}
 type IASTNodePrintStatement = {
   type: NodeType.PrintStatement
   value: IASTNode
@@ -293,4 +312,5 @@ type IASTNodeDeclareStatement = {
   value: [ IToken, IASTNode ]
 }
 export type IASTNode = IASTNodeLiteral | IASTNodeVariable | IASTNodeUnary | IASTNodeBinary | IASTNodeGrouping
+  | IASTNodeBlockExpression
   | IASTNodePrintStatement | IASTNodeExprStatement | IASTNodeStatementList | IASTNodeAssignStatement | IASTNodeDeclareStatement

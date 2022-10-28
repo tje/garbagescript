@@ -41,6 +41,7 @@ export const createInterpreter = () => {
         throw new Error(`Unknown binary operator: "${op.lexeme}"`)
       }
       case NodeType.Variable: return stack.read(node.value)
+      case NodeType.BlockExpr:
       case NodeType.Grouping: return resolveAstNode(node.value)
       case NodeType.PrintStatement: return console.log(resolveAstNode(node.value))
       case NodeType.ExprStatement: return resolveAstNode(node.value)

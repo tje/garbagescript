@@ -75,6 +75,7 @@ export function extractTokens (source: string) {
 }
 
 function discardTokens (tokens: IToken[]): IToken[] {
+  // Discard EOLs adjacent to these tokens
   const eolSiblings = [
     Token.Divide,
     Token.Multiply,
@@ -84,6 +85,11 @@ function discardTokens (tokens: IToken[]): IToken[] {
     Token.MinusEquals,
     Token.Assign,
   ]
+  // Discard EOLs specifically preceded by these tokens
+  const prevSiblings = [
+    Token.EOL,
+    Token.CurlyLeft,
+  ]
   return tokens
     .filter(({ type }) => type !== Token.Whitespace && type !== Token.Comment)
     .filter(({ type }, idx, a) => {
@@ -92,7 +98,7 @@ function discardTokens (tokens: IToken[]): IToken[] {
       }
       const prev: IToken = a[idx - 1]
       const next: IToken = a[idx + 1]
-      if (!prev || !next || prev.type === Token.EOL) {
+      if (!prev || !next || prevSiblings.includes(prev.type)) {
         return false
       }
       const adjacentOp = eolSiblings.includes(prev.type)
