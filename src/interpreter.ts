@@ -45,10 +45,16 @@ export const createInterpreter = () => {
       case NodeType.PrintStatement: return console.log(resolveAstNode(node.value))
       case NodeType.ExprStatement: return resolveAstNode(node.value)
       case NodeType.StatementList: return node.value.reduce((_, n) => resolveAstNode(n), null)
-      case NodeType.AssignStatement: {
+      case NodeType.DeclareStatement: {
         const key = node.value[0].lexeme
         const value = resolveAstNode(node.value[1])
         stack.write(key, value)
+        return value
+      }
+      case NodeType.AssignStatement: {
+        const key = node.value[0]
+        const value = resolveAstNode(node.value[1])
+        stack.write(key, value, { mode: 'update' })
         return value
       }
     }

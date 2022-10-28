@@ -28,21 +28,21 @@ class Parser {
 
   private parseStatement (): IASTNode {
     if (this.match(Token.Let)) {
-      return this.parseAssignStatement()
+      return this.parseDeclareStatement()
     }
     if (this.match(Token.Print)) {
       return this.parsePrintStatement()
     }
     return this.parseExpressionStatement()
   }
-  private parseAssignStatement (): IASTNode {
+  private parseDeclareStatement (): IASTNode {
     const name = this.consume(Token.Identifier, 'Expected identifier')
     this.consume(Token.Assign, 'Expected initializer')
     const value = this.parseExpression()
     this.consume(Token.EOL, 'Expected EOL')
     return {
-      type: NodeType.AssignStatement,
-      value: [ name, value, true ],
+      type: NodeType.DeclareStatement,
+      value: [ name, value ],
     }
   }
   private parsePrintStatement (): IASTNode {
@@ -64,7 +64,21 @@ class Parser {
 
 
   private parseExpression (): IASTNode {
-    return this.parseEquality()
+    return this.parseAssignment()
+  }
+  private parseAssignment (): IASTNode {
+    const expr = this.parseEquality()
+    if (this.match(Token.Assign)) {
+      const value = this.parseAssignment()
+      if (expr.type !== NodeType.Variable) {
+        throw new Error('Invalid assignment')
+      }
+      return {
+        type: NodeType.AssignStatement,
+        value: [ expr.value, value ],
+      }
+    }
+    return expr
   }
   private parseEquality (): IASTNode {
     let expr = this.parseComparison()
@@ -233,6 +247,7 @@ export enum NodeType {
   StatementList,
   ExprStatement,
   PrintStatement,
+  DeclareStatement,
   AssignStatement,
 }
 
@@ -270,7 +285,11 @@ type IASTNodeStatementList = {
 }
 type IASTNodeAssignStatement = {
   type: NodeType.AssignStatement
-  value: [ IToken, IASTNode, boolean ]
+  value: [ string, IASTNode ]
+}
+type IASTNodeDeclareStatement = {
+  type: NodeType.DeclareStatement
+  value: [ IToken, IASTNode ]
 }
 export type IASTNode = IASTNodeLiteral | IASTNodeVariable | IASTNodeUnary | IASTNodeBinary | IASTNodeGrouping
-  | IASTNodePrintStatement | IASTNodeExprStatement | IASTNodeStatementList | IASTNodeAssignStatement
+  | IASTNodePrintStatement | IASTNodeExprStatement | IASTNodeStatementList | IASTNodeAssignStatement | IASTNodeDeclareStatement
