@@ -55,7 +55,7 @@ export const MATCHER = {
   [Token.Less]: /^\</,
   [Token.Not]: /^\!/,
   [Token.Multiply]: /^\*/,
-  [Token.Divide]: /^\\/,
+  [Token.Divide]: /^\//,
   [Token.Plus]: /^\+/,
   [Token.Minus]: /^-/,
   [Token.Assign]: /^=/,
