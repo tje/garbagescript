@@ -27,6 +27,9 @@ class Parser {
   }
 
   private parseStatement (): IASTNode {
+    if (this.match(Token.If)) {
+      return this.parseIfStatement()
+    }
     if (this.match(Token.Let)) {
       return this.parseDeclareStatement()
     }
@@ -34,6 +37,21 @@ class Parser {
       return this.parsePrintStatement()
     }
     return this.parseExpressionStatement()
+  }
+  private parseIfStatement (): IASTNode {
+    // @todo Fix then/else being expression/statement respectively
+    const expr = this.parseExpression()
+    const exprThen = this.parseExpression()
+    let exprElse = null
+    if (this.match(Token.Else)) {
+      exprElse = this.parseStatement()
+    } else {
+      this.consume(Token.EOL, 'Expected EOL after if/else')
+    }
+    return {
+      type: NodeType.IfStatement,
+      value: [expr, exprThen, exprElse],
+    }
   }
   private parseDeclareStatement (): IASTNode {
     const name = this.consume(Token.Identifier, 'Expected identifier')
@@ -265,6 +283,7 @@ export enum NodeType {
   PrintStatement,
   DeclareStatement,
   AssignStatement,
+  IfStatement,
 }
 
 type IASTNodeLiteral = {
@@ -311,6 +330,11 @@ type IASTNodeDeclareStatement = {
   type: NodeType.DeclareStatement
   value: [ IToken, IASTNode ]
 }
+type IASTNodeIfStatement = {
+  type: NodeType.IfStatement
+  value: [ IASTNode, IASTNode, IASTNode | null ]
+}
 export type IASTNode = IASTNodeLiteral | IASTNodeVariable | IASTNodeUnary | IASTNodeBinary | IASTNodeGrouping
   | IASTNodeBlockExpression
   | IASTNodePrintStatement | IASTNodeExprStatement | IASTNodeStatementList | IASTNodeAssignStatement | IASTNodeDeclareStatement
+  | IASTNodeIfStatement

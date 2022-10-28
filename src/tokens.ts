@@ -35,6 +35,8 @@ export enum Token {
   EOF = 'EOF',
 
   Print = 'PRINT',
+  If = 'IF',
+  Else = 'ELSE',
 }
 
 export const MATCHER = {
@@ -65,7 +67,9 @@ export const MATCHER = {
   [Token.Identifier]: /^\$[a-zA-Z_\d]+/,
   [Token.NumberLiteral]: /^[\d]+[\d_]*(\.[\d_]*)?/,
   [Token.StringLiteral]: /^"(?:[^\\"]|\\(?:[bfnrtv"\\/]|u[0-9a-fA-F]{4}))*"/,
-  [Token.BoolLiteral]: /^true|false/,
+  [Token.BoolLiteral]: /^(true|false)/,
 
   [Token.Print]: /^print/,
+  [Token.If]: /^if\b/,
+  [Token.Else]: /^else\b/,
 }

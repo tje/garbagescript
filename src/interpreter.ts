@@ -66,6 +66,15 @@ export const createInterpreter = () => {
         stack.write(key, value, { mode: 'update' })
         return value
       }
+      case NodeType.IfStatement: {
+        const cond = resolveAstNode(node.value[0])
+        if (cond) {
+          return resolveAstNode(node.value[1])
+        } else if (node.value[2]) {
+          return resolveAstNode(node.value[2])
+        }
+        return false
+      }
     }
   }
 
