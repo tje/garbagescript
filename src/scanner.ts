@@ -1,14 +1,15 @@
 import { Token, MATCHER } from './tokens'
 
-export function scanSource (source: string) {
-  let tokens = extractTokens(source)
+export function scanSource (source: string): [ IToken[], ScanError[] ] {
+  let [ tokens, errs ] = extractTokens(source)
   tokens = discardTokens(tokens)
-  return tokens
+  return [ tokens, errs ]
 }
 
-export function extractTokens (source: string) {
+type ScanError = { col: number, ln: number, msg: string }
+export function extractTokens (source: string): [ IToken[], ScanError[] ]{
   const tokens: IToken[] = []
-  const errs: Array<{ col: number, ln: number, msg: string }> = []
+  const errs: Array<ScanError> = []
   let hadErr = false
 
   let position = 0
@@ -71,7 +72,7 @@ export function extractTokens (source: string) {
     }
   }
 
-  return tokens
+  return [ tokens, errs ]
 }
 
 function discardTokens (tokens: IToken[]): IToken[] {
