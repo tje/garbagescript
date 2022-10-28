@@ -77,7 +77,7 @@ function discardTokens (tokens: IToken[]): IToken[] {
     Token.Minus,
     Token.PlusEquals,
     Token.MinusEquals,
-    Token.Equals,
+    Token.Assign,
   ]
   return tokens
     .filter(({ type }) => type !== Token.Whitespace && type !== Token.Comment)
@@ -96,10 +96,8 @@ function discardTokens (tokens: IToken[]): IToken[] {
     })
 }
 
-type IToken = {
+export type IToken = {
   type: Token
   lexeme: string
   offset: number
 }
-
-// function createToken (tokenType: Token, lexeme)
