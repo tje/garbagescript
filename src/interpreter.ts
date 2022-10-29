@@ -45,6 +45,17 @@ export const createInterpreter = (subjectData?: { [key: string]: any }) => {
         }
         throw new Error(`Unknown binary operator: "${op.lexeme}"`)
       }
+      case NodeType.LogicalExpr: {
+        const op = node.value[1]
+        const left = resolveAstNode(node.value[0])
+        if (op.type === Token.Or && left) {
+          return left
+        }
+        if (op.type === Token.And && !left) {
+          return left
+        }
+        return resolveAstNode(node.value[2])
+      }
       case NodeType.Variable: return stack.read(node.value)
       case NodeType.BlockExpr: {
         stack.push()

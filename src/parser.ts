@@ -141,7 +141,7 @@ class Parser {
     return this.parseAssignment()
   }
   private parseAssignment (): IASTNode {
-    const expr = this.parseEquality()
+    const expr = this.parseOr()
     if (this.match(Token.Assign, Token.PlusEquals, Token.MinusEquals, Token.MultiplyEquals, Token.DivideEquals)) {
       const token = this.previous()
       const value = this.parseAssignment()
@@ -153,6 +153,32 @@ class Parser {
         value: [ expr.value, value, token ],
       }
     }
+    return expr
+  }
+  private parseOr (): IASTNode {
+    let expr = this.parseAnd()
+    while (this.match(Token.Or)) {
+      const op = this.previous()
+      const right = this.parseEquality()
+      expr = {
+        type: NodeType.LogicalExpr,
+        value: [ expr, op, right ],
+      }
+    }
+    return expr
+  }
+  private parseAnd (): IASTNode {
+    let expr = this.parseEquality()
+
+    while (this.match(Token.And)) {
+      const op = this.previous()
+      const right = this.parseEquality()
+      expr = {
+        type: NodeType.LogicalExpr,
+        value: [ expr, op, right ],
+      }
+    }
+
     return expr
   }
   private parseEquality (): IASTNode {
@@ -343,6 +369,7 @@ export const generateAST = (tokens: IToken[]) => {
 
 export enum NodeType {
   Literal,
+  LogicalExpr,
   BinaryExpr,
   UnaryExpr,
   Grouping,
@@ -363,6 +390,10 @@ export enum NodeType {
 type IASTNodeLiteral = {
   type: NodeType.Literal
   value: string | number | boolean
+}
+type IASTNodeLogicalExpr = {
+  type: NodeType.LogicalExpr
+  value: [ IASTNode, IToken, IASTNode ]
 }
 type IASTNodeVariable = {
   type: NodeType.Variable
@@ -420,7 +451,7 @@ type IASTNodeTakeStatement = {
   type: NodeType.TakeStatement
   value: IASTNode[]
 }
-export type IASTNode = IASTNodeLiteral | IASTNodeVariable | IASTNodeUnary | IASTNodeBinary | IASTNodeGrouping
+export type IASTNode = IASTNodeLiteral | IASTNodeLogicalExpr | IASTNodeVariable | IASTNodeUnary | IASTNodeBinary | IASTNodeGrouping
   | IASTNodeBlockExpression | IASTNodeCollection
   | IASTNodePrintStatement | IASTNodeExprStatement | IASTNodeStatementList | IASTNodeAssignStatement | IASTNodeDeclareStatement
   | IASTNodeIfStatement | IASTNodeIterStatement | IASTNodeTakeStatement
