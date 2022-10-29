@@ -40,6 +40,9 @@ export enum Token {
   Print = 'PRINT',
   If = 'IF',
   Else = 'ELSE',
+  Each = 'EACH',
+  Of = 'OF',
+  Includes = 'INCLUDES',
 }
 
 export const MATCHER = {
@@ -75,7 +78,10 @@ export const MATCHER = {
   [Token.StringLiteral]: /^"(?:[^\\"]|\\(?:[bfnrtv"\\/]|u[0-9a-fA-F]{4}))*"/,
   [Token.BoolLiteral]: /^(true|false)/,
 
-  [Token.Print]: /^print/,
+  [Token.Print]: /^print\b/,
   [Token.If]: /^if\b/,
   [Token.Else]: /^else\b/,
+  [Token.Each]: /^(each|for)\b/,
+  [Token.Of]: /^(of|in)\b/,
+  [Token.Includes]: /^includes\b/,
 }

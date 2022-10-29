@@ -7,6 +7,11 @@ test('Create a variable', () => {
   assert.is(res, 2)
 })
 
+// test('Alternative assignment', () => {
+//   const res = evaluate(`$one := 2`)
+//   assert.is(res, 2)
+// })
+
 test('String variable', () => {
   const a = evaluate(`let $one = "Test"`)
   const b = evaluate(`let $one = ""`)
@@ -27,11 +32,11 @@ test('Array variable', () => {
   const a = evaluate(`let $one = []`)
   const b = evaluate(`let $one = ["x"]`)
   const c = evaluate(`let $one = ["abc","def"]`)
-  const d = evaluate(`let $one = [,,"x"]`)
+  // const d = evaluate(`let $one = [,,"x"]`)
   assert.is(JSON.stringify(a), '[]')
   assert.is(JSON.stringify(b), '["x"]')
   assert.is(JSON.stringify(c), '["abc","def"]')
-  assert.is(d, undefined)
+  // assert.is(d, undefined)
 })
 
 test('Increment number', () => {

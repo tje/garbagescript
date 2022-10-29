@@ -27,6 +27,9 @@ class Parser {
   }
 
   private parseStatement (): IASTNode {
+    if (this.match(Token.Each)) {
+      return this.parseIterStatement()
+    }
     if (this.match(Token.If)) {
       return this.parseIfStatement()
     }
@@ -37,6 +40,19 @@ class Parser {
       return this.parsePrintStatement()
     }
     return this.parseExpressionStatement()
+  }
+  private parseIterStatement (): IASTNode {
+    let scope = null
+    if (this.peekNext().type === Token.Of && this.match(Token.Identifier)) {
+      scope = this.previous()
+      this.consume(Token.Of, 'Expected "of"')
+    }
+    const target = this.parseExpression()
+    const expr = this.parseStatement()
+    return {
+      type: NodeType.IterStatement,
+      value: [target, expr, scope],
+    }
   }
   private parseIfStatement (): IASTNode {
     // @todo Fix then/else being expression/statement respectively
@@ -228,6 +244,7 @@ class Parser {
       }
     }
 
+    console.log(this.peek())
     throw new Error('No idea what to do')
   }
 
@@ -270,6 +287,9 @@ class Parser {
   private peek (): IToken {
     return this.tokens[this.cursor]
   }
+  private peekNext (): IToken {
+    return this.tokens[this.cursor + 1]
+  }
 
   private isAtEnd (): boolean {
     return this.peek().type === Token.EOF
@@ -296,6 +316,7 @@ export enum NodeType {
   DeclareStatement,
   AssignStatement,
   IfStatement,
+  IterStatement,
 }
 
 type IASTNodeLiteral = {
@@ -350,7 +371,11 @@ type IASTNodeIfStatement = {
   type: NodeType.IfStatement
   value: [ IASTNode, IASTNode, IASTNode | null ]
 }
+type IASTNodeIterStatement = {
+  type: NodeType.IterStatement
+  value: [ IASTNode, IASTNode, IToken | null ]
+}
 export type IASTNode = IASTNodeLiteral | IASTNodeVariable | IASTNodeUnary | IASTNodeBinary | IASTNodeGrouping
   | IASTNodeBlockExpression | IASTNodeCollection
   | IASTNodePrintStatement | IASTNodeExprStatement | IASTNodeStatementList | IASTNodeAssignStatement | IASTNodeDeclareStatement
-  | IASTNodeIfStatement
+  | IASTNodeIfStatement | IASTNodeIterStatement

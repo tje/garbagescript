@@ -85,6 +85,20 @@ export const createInterpreter = (subjectData?: { [key: string]: any }) => {
         }
         return
       }
+      case NodeType.IterStatement: {
+        const items = resolveAstNode(node.value[0])
+        const out = []
+        for (const item of items) {
+          stack.push()
+          stack.write('__scope', item)
+          if (node.value[2]) {
+            stack.write(node.value[2].lexeme, item)
+          }
+          out.push(resolveAstNode(node.value[1]))
+          stack.pop()
+        }
+        return out
+      }
       case NodeType.Collection: return node.value.map((n) => resolveAstNode(n))
     }
   }
