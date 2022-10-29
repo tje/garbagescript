@@ -83,7 +83,7 @@ export const createInterpreter = (subjectData?: { [key: string]: any }) => {
         } else if (node.value[2]) {
           return resolveAstNode(node.value[2])
         }
-        return false
+        return
       }
     }
   }
