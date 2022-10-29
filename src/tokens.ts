@@ -41,7 +41,7 @@ export enum Token {
 
 export const MATCHER = {
   [Token.EOL]: /^[\r\n;]/,
-  [Token.Whitespace]: /^\s+/,
+  [Token.Whitespace]: /^[ \t]+/,
   [Token.Comment]: /^\/\/.*?(?=[\r\n])/,
   [Token.PlusEquals]: /^\+=/,
   [Token.MinusEquals]: /^-=/,
