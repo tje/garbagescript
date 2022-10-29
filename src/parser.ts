@@ -27,6 +27,9 @@ class Parser {
   }
 
   private parseStatement (): IASTNode {
+    if (this.match(Token.Take)) {
+      return this.parseTakeStatement()
+    }
     if (this.match(Token.Each)) {
       return this.parseIterStatement()
     }
@@ -40,6 +43,43 @@ class Parser {
       return this.parsePrintStatement()
     }
     return this.parseExpressionStatement()
+  }
+  private parseTakeStatement (): IASTNode {
+    const values: IASTNode[] = []
+    if (this.match(Token.CurlyLeft)) {
+      while (!this.match(Token.CurlyRight)) {
+        const token = this.consume(Token.Identifier, 'Expected identifier')
+        values.push({
+          type: NodeType.DeclareStatement,
+          value: [
+            token,
+            {
+              type: NodeType.Variable,
+              value: '__scope.' + token.lexeme,
+            }
+          ]
+        })
+        this.match(Token.Comma)
+        this.match(Token.EOL)
+      }
+    } else {
+      const token = this.consume(Token.Identifier, 'Expected identifier')
+      values.push({
+        type: NodeType.DeclareStatement,
+        value: [
+          token,
+          {
+            type: NodeType.Variable,
+            value: '__scope.' + token.lexeme,
+          }
+        ]
+      })
+    }
+    this.consume(Token.EOL, 'Expected EOL on take')
+    return {
+      type: NodeType.TakeStatement,
+      value: values,
+    }
   }
   private parseIterStatement (): IASTNode {
     let scope = null
@@ -317,6 +357,7 @@ export enum NodeType {
   AssignStatement,
   IfStatement,
   IterStatement,
+  TakeStatement,
 }
 
 type IASTNodeLiteral = {
@@ -375,7 +416,11 @@ type IASTNodeIterStatement = {
   type: NodeType.IterStatement
   value: [ IASTNode, IASTNode, IToken | null ]
 }
+type IASTNodeTakeStatement = {
+  type: NodeType.TakeStatement
+  value: IASTNode[]
+}
 export type IASTNode = IASTNodeLiteral | IASTNodeVariable | IASTNodeUnary | IASTNodeBinary | IASTNodeGrouping
   | IASTNodeBlockExpression | IASTNodeCollection
   | IASTNodePrintStatement | IASTNodeExprStatement | IASTNodeStatementList | IASTNodeAssignStatement | IASTNodeDeclareStatement
-  | IASTNodeIfStatement | IASTNodeIterStatement
+  | IASTNodeIfStatement | IASTNodeIterStatement | IASTNodeTakeStatement

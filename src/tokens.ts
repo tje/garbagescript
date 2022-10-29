@@ -43,6 +43,7 @@ export enum Token {
   Each = 'EACH',
   Of = 'OF',
   Includes = 'INCLUDES',
+  Take = 'TAKE',
 }
 
 export const MATCHER = {
@@ -84,4 +85,5 @@ export const MATCHER = {
   [Token.Each]: /^(each|for)\b/,
   [Token.Of]: /^(of|in)\b/,
   [Token.Includes]: /^includes\b/,
+  [Token.Take]: /^(take|get|use)\b/,
 }

@@ -100,6 +100,10 @@ export const createInterpreter = (subjectData?: { [key: string]: any }) => {
         return out
       }
       case NodeType.Collection: return node.value.map((n) => resolveAstNode(n))
+      case NodeType.TakeStatement: {
+        node.value.map((n) => resolveAstNode(n))
+        return
+      }
     }
   }
 
@@ -155,7 +159,18 @@ const createStack = () => {
   }
 
   const read = (key: string) => {
-    const item = _findInStack(key)
+    const parts = key.split('.')
+    let item = _findInStack(parts.shift()!)
+    while (item && parts.length > 0) {
+      const next = parts.shift()!
+      if (item.value?.[next] === undefined) {
+        return undefined
+      }
+      item = {
+        ...item,
+        value: item.value[next],
+      }
+    }
     if (item?.mutable === false) {
       return JSON.parse(JSON.stringify(item.value))
     }
