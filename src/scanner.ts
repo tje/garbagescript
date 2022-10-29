@@ -1,9 +1,15 @@
 import { Token, MATCHER } from './tokens'
 
 export function scanSource (source: string): [ IToken[], ScanError[] ] {
-  let [ tokens, errs ] = extractTokens(source)
+  let [ tokens, errs ] = extractTokens(formatSource(source))
   tokens = discardTokens(tokens)
   return [ tokens, errs ]
+}
+
+function formatSource (source: string) {
+  // Inject EOL markers before closing curly braces
+  // @todo Is this as bad as it feels?
+  return source.replace(/((?<![\r\n;])\})/g, '\n}')
 }
 
 type ScanError = { col: number, ln: number, msg: string }
