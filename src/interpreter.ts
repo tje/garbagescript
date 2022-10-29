@@ -1,6 +1,16 @@
 import { IASTNode, NodeType } from './parser'
 import { Token } from './tokens'
 
+class RejectMessage extends Error {
+  constructor (private _msg: string) {
+    super(_msg)
+  }
+
+  public get reason () {
+    return this._msg
+  }
+}
+
 export const interpretAst = (...nodes: IASTNode[]) => {
   const interpreter = createInterpreter()
   return interpreter.run(...nodes)
@@ -116,6 +126,36 @@ export const createInterpreter = (subjectData?: { [key: string]: any }) => {
       case NodeType.Collection: return node.value.map((n) => resolveAstNode(n))
       case NodeType.TakeStatement: {
         node.value.map((n) => resolveAstNode(n))
+        return
+      }
+      case NodeType.ValidateStatement: {
+        const errors = []
+        let label = null
+        if (node.value[1]) {
+          label = resolveAstNode(node.value[1])
+        }
+        for (const statement of node.value[0]) {
+          try {
+            resolveAstNode(statement)
+          } catch (err) {
+            if (err instanceof RejectMessage) {
+              errors.push(err.reason)
+            } else {
+              throw err
+            }
+          }
+        }
+        return {
+          passed: errors.length === 0,
+          label,
+          errors,
+        }
+      }
+      case NodeType.RejectStatement: {
+        const value = resolveAstNode(node.value)
+        if (value) {
+          throw new RejectMessage(value)
+        }
         return
       }
     }

@@ -47,6 +47,8 @@ export enum Token {
   Take = 'TAKE',
   Or = 'OR',
   And = 'AND',
+  Reject = 'REJECT',
+  Validate = 'VALIDATE',
 }
 
 export const MATCHER = {
@@ -92,4 +94,6 @@ export const MATCHER = {
   [Token.Take]: /^(take|get|use)\b/,
   [Token.Or]: /^or\b/,
   [Token.And]: /^and\b/,
+  [Token.Reject]: /^reject\b/,
+  [Token.Validate]: /^validate\b/,
 }

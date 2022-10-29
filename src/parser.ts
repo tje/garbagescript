@@ -30,6 +30,12 @@ class Parser {
     if (this.match(Token.Take)) {
       return this.parseTakeStatement()
     }
+    if (this.match(Token.Reject)) {
+      return this.parseRejectStatement()
+    }
+    if (this.match(Token.Validate)) {
+      return this.parseValidateStatement()
+    }
     if (this.match(Token.Each)) {
       return this.parseIterStatement()
     }
@@ -79,6 +85,33 @@ class Parser {
     return {
       type: NodeType.TakeStatement,
       value: values,
+    }
+  }
+  private parseValidateStatement (): IASTNode {
+    let note = null
+    if (this.check(Token.StringLiteral)) {
+      note = this.parsePrimary()
+    }
+    this.consume(Token.CurlyLeft, 'Expected opening block')
+    const statements: IASTNode[] = []
+    while (!this.match(Token.CurlyRight)) {
+      statements.push(this.parseStatement())
+    }
+    this.consume(Token.EOL, 'Expected EOL for validation block')
+    return {
+      type: NodeType.ValidateStatement,
+      value: [
+        statements,
+        note,
+      ],
+    }
+  }
+  private parseRejectStatement (): IASTNode {
+    const expr = this.parseExpression()
+    this.consume(Token.EOL, 'Expected EOL on reject')
+    return {
+      type: NodeType.RejectStatement,
+      value: expr,
     }
   }
   private parseIterStatement (): IASTNode {
@@ -311,7 +344,7 @@ class Parser {
     }
 
     console.log(this.peek())
-    throw new Error('No idea what to do')
+    throw new Error('Bad syntax')
   }
 
 
@@ -385,6 +418,8 @@ export enum NodeType {
   IfStatement,
   IterStatement,
   TakeStatement,
+  RejectStatement,
+  ValidateStatement,
 }
 
 type IASTNodeLiteral = {
@@ -451,7 +486,15 @@ type IASTNodeTakeStatement = {
   type: NodeType.TakeStatement
   value: IASTNode[]
 }
+type IASTNodeRejectStatement = {
+  type: NodeType.RejectStatement
+  value: IASTNode
+}
+type IASTNodeValidateStatement = {
+  type: NodeType.ValidateStatement
+  value: [ IASTNode[], IASTNode | null ]
+}
 export type IASTNode = IASTNodeLiteral | IASTNodeLogicalExpr | IASTNodeVariable | IASTNodeUnary | IASTNodeBinary | IASTNodeGrouping
   | IASTNodeBlockExpression | IASTNodeCollection
   | IASTNodePrintStatement | IASTNodeExprStatement | IASTNodeStatementList | IASTNodeAssignStatement | IASTNodeDeclareStatement
-  | IASTNodeIfStatement | IASTNodeIterStatement | IASTNodeTakeStatement
+  | IASTNodeIfStatement | IASTNodeIterStatement | IASTNodeTakeStatement | IASTNodeRejectStatement | IASTNodeValidateStatement
