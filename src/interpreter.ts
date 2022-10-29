@@ -42,6 +42,9 @@ export const createInterpreter = (subjectData?: { [key: string]: any }) => {
           case Token.LessEqual: return left <= right
           case Token.Equals: return left == right
           case Token.NotEquals: return left != right
+          case Token.Includes: return left?.includes?.(right)
+          case Token.Matches: return typeof left === 'string' && typeof right === 'string' && left.toLowerCase().includes(right.toLowerCase())
+          case Token.Of: return Array.isArray(right) && right.includes(left)
         }
         throw new Error(`Unknown binary operator: "${op.lexeme}"`)
       }

@@ -184,7 +184,7 @@ class Parser {
   private parseEquality (): IASTNode {
     let expr = this.parseComparison()
 
-    while (this.match(Token.NotEquals, Token.Equals)) {
+    while (this.match(Token.NotEquals, Token.Equals, Token.Includes, Token.Matches, Token.Of)) {
       const op = this.previous()
       const right = this.parseComparison()
       expr = {
