@@ -207,6 +207,17 @@ class Parser {
         }
       }
     }
+    if (this.match(Token.BraceLeft)) {
+      const items: IASTNode[] = []
+      while (!this.match(Token.BraceRight)) {
+        items.push(this.parseExpression())
+        this.match(Token.Comma)
+      }
+      return {
+        type: NodeType.Collection,
+        value: items,
+      }
+    }
 
     if (this.match(Token.ParenLeft)) {
       const expr = this.parseExpression()
@@ -277,6 +288,7 @@ export enum NodeType {
   Grouping,
   Variable,
   BlockExpr,
+  Collection,
 
   StatementList,
   ExprStatement,
@@ -293,6 +305,10 @@ type IASTNodeLiteral = {
 type IASTNodeVariable = {
   type: NodeType.Variable
   value: string
+}
+type IASTNodeCollection = {
+  type: NodeType.Collection
+  value: IASTNode[]
 }
 type IASTNodeUnary = {
   type: NodeType.UnaryExpr
@@ -335,6 +351,6 @@ type IASTNodeIfStatement = {
   value: [ IASTNode, IASTNode, IASTNode | null ]
 }
 export type IASTNode = IASTNodeLiteral | IASTNodeVariable | IASTNodeUnary | IASTNodeBinary | IASTNodeGrouping
-  | IASTNodeBlockExpression
+  | IASTNodeBlockExpression | IASTNodeCollection
   | IASTNodePrintStatement | IASTNodeExprStatement | IASTNodeStatementList | IASTNodeAssignStatement | IASTNodeDeclareStatement
   | IASTNodeIfStatement

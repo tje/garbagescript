@@ -85,6 +85,7 @@ export const createInterpreter = (subjectData?: { [key: string]: any }) => {
         }
         return
       }
+      case NodeType.Collection: return node.value.map((n) => resolveAstNode(n))
     }
   }
 
