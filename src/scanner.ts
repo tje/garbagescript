@@ -12,7 +12,13 @@ function formatSource (source: string) {
   return source.replace(/((?<![\r\n;])\})/g, '\n}')
 }
 
-type ScanError = { col: number, ln: number, msg: string }
+type ScanError = {
+  offset: number
+  endOffset?: number
+  col: number
+  ln: number
+  msg: string
+}
 export function extractTokens (source: string): [ IToken[], ScanError[] ]{
   const tokens: IToken[] = []
   const errs: Array<ScanError> = []
@@ -32,6 +38,9 @@ export function extractTokens (source: string): [ IToken[], ScanError[] ]{
           offset: (match.index ?? 0) + position,
         })
         position += lexeme.length
+        if (hadErr) {
+          errs[errs.length - 1].endOffset = tokens[tokens.length - 1].offset
+        }
         hadErr = false
         continue loop
       }
@@ -45,6 +54,7 @@ export function extractTokens (source: string): [ IToken[], ScanError[] ]{
         col = position - lastEol.offset
       }
       errs.push({
+        offset: position,
         ln,
         col,
         msg: `Unknown token: ${slice.substring(0, 1)}`,
