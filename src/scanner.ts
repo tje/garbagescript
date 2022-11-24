@@ -9,7 +9,9 @@ export function scanSource (source: string): [ IToken[], ScanError[] ] {
 function formatSource (source: string) {
   // Inject EOL markers before closing curly braces
   // @todo Is this as bad as it feels?
-  return source.replace(/((?<![\r\n;])\})/g, '\n}')
+  // @todo It is. Remove this, it makes LSP implementation horribly difficult,
+  //    token positions become scrambled and I can't sync w/ documents
+  return source//.replace(/((?<![\r\n;])\})/g, '\n}')
 }
 
 type ScanError = {
@@ -65,11 +67,6 @@ export function extractTokens (source: string): [ IToken[], ScanError[] ]{
   }
 
   tokens.push({
-    type: Token.EOL,
-    lexeme: '',
-    offset: position,
-  })
-  tokens.push({
     type: Token.EOF,
     lexeme: '',
     offset: position,
@@ -108,7 +105,7 @@ function discardTokens (tokens: IToken[]): IToken[] {
     Token.CurlyLeft,
   ]
   return tokens
-    .filter(({ type }) => type !== Token.Whitespace && type !== Token.Comment)
+    .filter(({ type }) => type !== Token.Whitespace && type !== Token.EOL && type !== Token.Comment)
     .filter(({ type }, idx, a) => {
       if (type !== Token.EOL) {
         return true

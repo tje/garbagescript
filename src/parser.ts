@@ -66,7 +66,6 @@ class Parser {
           ]
         })
         this.match(Token.Comma)
-        this.match(Token.EOL)
       }
     } else {
       const token = this.consume(Token.Identifier, 'Expected identifier')
@@ -81,7 +80,6 @@ class Parser {
         ]
       })
     }
-    this.consume(Token.EOL, 'Expected EOL on take')
     return {
       type: NodeType.TakeStatement,
       value: values,
@@ -97,7 +95,6 @@ class Parser {
     while (!this.match(Token.CurlyRight)) {
       statements.push(this.parseStatement())
     }
-    this.consume(Token.EOL, 'Expected EOL for validation block')
     return {
       type: NodeType.ValidateStatement,
       value: [
@@ -108,7 +105,6 @@ class Parser {
   }
   private parseRejectStatement (): IASTNode {
     const expr = this.parseExpression()
-    this.consume(Token.EOL, 'Expected EOL on reject')
     return {
       type: NodeType.RejectStatement,
       value: expr,
@@ -134,8 +130,6 @@ class Parser {
     let exprElse = null
     if (this.match(Token.Else)) {
       exprElse = this.parseStatement()
-    } else {
-      this.consume(Token.EOL, 'Expected EOL after if/else')
     }
     return {
       type: NodeType.IfStatement,
@@ -146,7 +140,6 @@ class Parser {
     const name = this.consume(Token.Identifier, 'Expected identifier')
     this.consume(Token.Assign, 'Expected initializer')
     const value = this.parseExpression()
-    this.consume(Token.EOL, 'Expected EOL')
     return {
       type: NodeType.DeclareStatement,
       value: [ name, value ],
@@ -154,7 +147,6 @@ class Parser {
   }
   private parsePrintStatement (): IASTNode {
     const value = this.parseExpression()
-    this.consume(Token.EOL, 'No EOL')
     return {
       type: NodeType.PrintStatement,
       value,
@@ -162,7 +154,6 @@ class Parser {
   }
   private parseExpressionStatement (): IASTNode {
     const value = this.parseExpression()
-    this.consume(Token.EOL, 'No EOL')
     return {
       type: NodeType.ExprStatement,
       value,
