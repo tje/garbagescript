@@ -11,20 +11,38 @@ class RejectMessage extends Error {
   }
 }
 
+class StopEarly extends Error {
+  constructor () {
+    super()
+  }
+}
+
 export const interpretAst = (...nodes: IASTNode[]) => {
   const interpreter = createInterpreter()
   return interpreter.run(...nodes)
 }
 
-export const createInterpreter = (subjectData?: { [key: string]: any }) => {
+type IInterpreterOptions = {
+  subjectData?: { [key: string]: any }
+  ignoreErrors?: boolean
+  stopAt?: number
+}
+
+export const createInterpreter = (options: IInterpreterOptions = {}) => {
+  let cursor = 0
+
   const stack = createStack()
-  if (subjectData) {
-    for (const [ key, val ] of Object.entries(subjectData)) {
+  if (options.subjectData) {
+    for (const [ key, val ] of Object.entries(options.subjectData)) {
       stack.write(key, val, { mutable: false })
     }
   }
 
   const resolveAstNode = (node: IASTNode): any => {
+    cursor = node.start
+    if (options.stopAt !== undefined && options.stopAt <= cursor) {
+      throw new StopEarly()
+    }
     switch (node.type) {
       case NodeType.Literal: return node.value
       case NodeType.UnaryExpr: {
@@ -34,6 +52,9 @@ export const createInterpreter = (subjectData?: { [key: string]: any }) => {
           return !ex
         } else if (op.type === Token.Minus) {
           return ex * -1
+        }
+        if (options.ignoreErrors) {
+          return
         }
         throw new Error(`Unknown unary operator: "${op.lexeme}"`)
       }
@@ -56,6 +77,9 @@ export const createInterpreter = (subjectData?: { [key: string]: any }) => {
           case Token.Matches: return typeof left === 'string' && typeof right === 'string' && left.toLowerCase().includes(right.toLowerCase())
           case Token.Of: return Array.isArray(right) && right.includes(left)
         }
+        if (options.ignoreErrors) {
+          return
+        }
         throw new Error(`Unknown binary operator: "${op.lexeme}"`)
       }
       case NodeType.LogicalExpr: {
@@ -72,7 +96,7 @@ export const createInterpreter = (subjectData?: { [key: string]: any }) => {
       case NodeType.Variable: return stack.read(node.value)
       case NodeType.BlockExpr: {
         stack.push()
-        const out = resolveAstNode(node.value)
+        const out = resolveAstNode(node.value as IASTNode)
         stack.pop()
         return out
       }
@@ -140,7 +164,7 @@ export const createInterpreter = (subjectData?: { [key: string]: any }) => {
           } catch (err) {
             if (err instanceof RejectMessage) {
               errors.push(err.reason)
-            } else {
+            } else if (!options.ignoreErrors) {
               throw err
             }
           }
@@ -162,15 +186,27 @@ export const createInterpreter = (subjectData?: { [key: string]: any }) => {
   }
 
   const run = (...nodes: IASTNode[]) => {
+    cursor = 0
+    stack.flush()
     let output = null
     for (const node of nodes) {
-      output = resolveAstNode(node)
+      try {
+        output = resolveAstNode(node)
+      } catch (e) {
+        if (e instanceof StopEarly) {
+          return output
+        }
+        throw e
+      }
     }
     return output
   }
 
+  const getScope = () => stack.dump()
+
   return {
     run,
+    getScope,
   }
 }
 
@@ -184,7 +220,7 @@ type IStackWriteConfig = {
   mode?: 'upsert' | 'update' | 'insert'
   mutable?: boolean
 }
-const createStack = () => {
+export const createStack = () => {
   const stack: IStackFrame[] = []
 
   const _findInStack = (key: string) => {
@@ -273,6 +309,10 @@ const createStack = () => {
     return value
   }
 
+  const flush = () => {
+    stack.splice(1, stack.length - 1)
+  }
+
   push()
 
   return {
@@ -280,5 +320,10 @@ const createStack = () => {
     write,
     push,
     pop,
+    flush,
+
+    dump () {
+      return stack.slice()
+    },
   }
 }

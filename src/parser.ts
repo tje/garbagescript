@@ -23,6 +23,8 @@ class Parser {
     return {
       type: NodeType.StatementList,
       value: statements,
+      start: 0,
+      end: this.previous().offset,
     }
   }
 
@@ -51,6 +53,7 @@ class Parser {
     return this.parseExpressionStatement()
   }
   private parseTakeStatement (): IASTNode {
+    const start = this.previous().offset
     const values: IASTNode[] = []
     if (this.match(Token.CurlyLeft)) {
       while (!this.match(Token.CurlyRight)) {
@@ -62,8 +65,12 @@ class Parser {
             {
               type: NodeType.Variable,
               value: '__scope.' + token.lexeme,
-            }
-          ]
+              start: token.offset,
+              end: this.peek().offset,
+            },
+          ],
+          start: this.previous().offset,
+          end: this.peek().offset,
         })
         this.match(Token.Comma)
       }
@@ -76,16 +83,23 @@ class Parser {
           {
             type: NodeType.Variable,
             value: '__scope.' + token.lexeme,
+            start: token.offset,
+            end: this.peek().offset,
           }
-        ]
+        ],
+        start: token.offset,
+        end: this.peek().offset,
       })
     }
     return {
       type: NodeType.TakeStatement,
       value: values,
+      start,
+      end: this.peek().offset,
     }
   }
   private parseValidateStatement (): IASTNode {
+    const start = this.previous().offset
     let note = null
     if (this.check(Token.StringLiteral)) {
       note = this.parsePrimary()
@@ -101,16 +115,22 @@ class Parser {
         statements,
         note,
       ],
+      start,
+      end: this.peek().offset,
     }
   }
   private parseRejectStatement (): IASTNode {
+    const start = this.previous().offset
     const expr = this.parseExpression()
     return {
       type: NodeType.RejectStatement,
       value: expr,
+      start,
+      end: this.peek().offset,
     }
   }
   private parseIterStatement (): IASTNode {
+    const start = this.previous().offset
     let scope = null
     if (this.peekNext().type === Token.Of && this.match(Token.Identifier)) {
       scope = this.previous()
@@ -121,9 +141,12 @@ class Parser {
     return {
       type: NodeType.IterStatement,
       value: [target, expr, scope],
+      start,
+      end: this.peek().offset,
     }
   }
   private parseIfStatement (): IASTNode {
+    const start = this.previous().offset
     // @todo Fix then/else being expression/statement respectively
     const expr = this.parseExpression()
     const exprThen = this.parseExpression()
@@ -134,29 +157,40 @@ class Parser {
     return {
       type: NodeType.IfStatement,
       value: [expr, exprThen, exprElse],
+      start,
+      end: exprElse?.end ?? exprThen.end,
     }
   }
   private parseDeclareStatement (): IASTNode {
+    const start = this.previous().offset
     const name = this.consume(Token.Identifier, 'Expected identifier')
     this.consume(Token.Assign, 'Expected initializer')
     const value = this.parseExpression()
     return {
       type: NodeType.DeclareStatement,
       value: [ name, value ],
+      start,
+      end: this.peek().offset,
     }
   }
   private parsePrintStatement (): IASTNode {
+    const start = this.previous().offset
     const value = this.parseExpression()
     return {
       type: NodeType.PrintStatement,
       value,
+      start,
+      end: this.peek().offset,
     }
   }
   private parseExpressionStatement (): IASTNode {
+    const start = this.peek().offset
     const value = this.parseExpression()
     return {
       type: NodeType.ExprStatement,
       value,
+      start,
+      end: this.peek().offset,
     }
   }
 
@@ -175,6 +209,8 @@ class Parser {
       return {
         type: NodeType.AssignStatement,
         value: [ expr.value, value, token ],
+        start: token.offset,
+        end: this.peek().offset,
       }
     }
     return expr
@@ -187,6 +223,8 @@ class Parser {
       expr = {
         type: NodeType.LogicalExpr,
         value: [ expr, op, right ],
+        start: op.offset,
+        end: this.peek().offset,
       }
     }
     return expr
@@ -200,6 +238,8 @@ class Parser {
       expr = {
         type: NodeType.LogicalExpr,
         value: [ expr, op, right ],
+        start: op.offset,
+        end: this.peek().offset,
       }
     }
 
@@ -214,6 +254,8 @@ class Parser {
       expr = {
         type: NodeType.BinaryExpr,
         value: [ expr, op, right ],
+        start: op.offset,
+        end: this.peek().offset,
       }
     }
 
@@ -228,6 +270,8 @@ class Parser {
       expr = {
         type: NodeType.BinaryExpr,
         value: [ expr, op, right ],
+        start: op.offset,
+        end: this.peek().offset,
       }
     }
 
@@ -242,6 +286,8 @@ class Parser {
       expr = {
         type: NodeType.BinaryExpr,
         value: [ expr, op, right ],
+        start: op.offset,
+        end: this.peek().offset,
       }
     }
 
@@ -256,6 +302,8 @@ class Parser {
       expr = {
         type: NodeType.BinaryExpr,
         value: [ expr, op, right ],
+        start: op.offset, // or expr?
+        end: this.peek().offset,
       }
     }
 
@@ -268,21 +316,29 @@ class Parser {
       return {
         type: NodeType.UnaryExpr,
         value: [ op, right ],
+        start: op.offset,
+        end: this.peek().offset,
       }
     }
     return this.parsePrimary()
   }
   private parsePrimary (): IASTNode {
+    const start = this.peek().offset
+
     if (this.match(Token.BoolLiteral)) {
       return {
         type: NodeType.Literal,
         value: this.previous().lexeme === 'true',
+        start,
+        end: this.peek().offset,
       }
     }
     if (this.match(Token.NumberLiteral)) {
       return {
         type: NodeType.Literal,
         value: parseFloat(this.previous().lexeme),
+        start,
+        end: this.peek().offset,
       }
     }
     if (this.match(Token.StringLiteral)) {
@@ -290,6 +346,8 @@ class Parser {
       return {
         type: NodeType.Literal,
         value: t.substring(1, t.length - 1),
+        start,
+        end: this.peek().offset,
       }
     }
     if (this.match(Token.Identifier)) {
@@ -297,6 +355,8 @@ class Parser {
       return {
         type: NodeType.Variable,
         value,
+        start,
+        end: this.peek().offset,
       }
     }
 
@@ -310,7 +370,13 @@ class Parser {
         value: {
           type: NodeType.StatementList,
           value: statements,
-        }
+          // @todo fix tihs
+          // @ts-ignore
+          start,
+          end: this.previous().offset,
+        },
+        start,
+        end: this.previous().offset,
       }
     }
     if (this.match(Token.BraceLeft)) {
@@ -322,6 +388,8 @@ class Parser {
       return {
         type: NodeType.Collection,
         value: items,
+        start,
+        end: this.previous().offset,
       }
     }
 
@@ -331,11 +399,19 @@ class Parser {
       return {
         type: NodeType.Grouping,
         value: expr,
+        start,
+        end: this.previous().offset,
       }
     }
 
-    console.log(this.peek())
+    // console.log(this.peek())
     throw new Error('Bad syntax')
+    // return {
+    //   type: NodeType.Literal,
+    //   value: -1,
+    //   start,
+    //   end: start,
+    // }
   }
 
 
@@ -485,7 +561,26 @@ type IASTNodeValidateStatement = {
   type: NodeType.ValidateStatement
   value: [ IASTNode[], IASTNode | null ]
 }
-export type IASTNode = IASTNodeLiteral | IASTNodeLogicalExpr | IASTNodeVariable | IASTNodeUnary | IASTNodeBinary | IASTNodeGrouping
-  | IASTNodeBlockExpression | IASTNodeCollection
-  | IASTNodePrintStatement | IASTNodeExprStatement | IASTNodeStatementList | IASTNodeAssignStatement | IASTNodeDeclareStatement
-  | IASTNodeIfStatement | IASTNodeIterStatement | IASTNodeTakeStatement | IASTNodeRejectStatement | IASTNodeValidateStatement
+export type IASTNode = (
+    IASTNodeLiteral
+  | IASTNodeLogicalExpr
+  | IASTNodeVariable
+  | IASTNodeUnary
+  | IASTNodeBinary
+  | IASTNodeGrouping
+  | IASTNodeBlockExpression
+  | IASTNodeCollection
+  | IASTNodePrintStatement
+  | IASTNodeExprStatement
+  | IASTNodeStatementList
+  | IASTNodeAssignStatement
+  | IASTNodeDeclareStatement
+  | IASTNodeIfStatement
+  | IASTNodeIterStatement
+  | IASTNodeTakeStatement
+  | IASTNodeRejectStatement
+  | IASTNodeValidateStatement
+) & {
+  start: number
+  end: number
+}
