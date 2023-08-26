@@ -320,7 +320,24 @@ class Parser {
         end: this.peek().offset,
       }
     }
-    return this.parsePrimary()
+    return this.parseOrnament()
+  }
+  private parseOrnament (): IASTNode {
+    let expr = this.parsePrimary()
+    while (this.match(Token.Ornament)) {
+      const start = this.previous().offset
+      if (!this.match(Token.Length, Token.Minimum, Token.Maximum, Token.Sum)) {
+        throw new Error('Invalid ornament')
+      }
+      const op = this.previous()
+      return {
+        type: NodeType.OrnamentExpr,
+        value: [ expr, op ],
+        start,
+        end: this.peek().offset,
+      }
+    }
+    return expr
   }
   private parsePrimary (): IASTNode {
     const start = this.peek().offset
@@ -472,6 +489,7 @@ export enum NodeType {
   LogicalExpr,
   BinaryExpr,
   UnaryExpr,
+  OrnamentExpr,
   Grouping,
   Variable,
   BlockExpr,
@@ -508,6 +526,10 @@ type IASTNodeCollection = {
 type IASTNodeUnary = {
   type: NodeType.UnaryExpr
   value: [ IToken, IASTNode ]
+}
+type IASTNodeOrnament = {
+  type: NodeType.OrnamentExpr
+  value: [ IASTNode, IToken ]
 }
 type IASTNodeBinary = {
   type: NodeType.BinaryExpr
@@ -566,6 +588,7 @@ export type IASTNode = (
   | IASTNodeLogicalExpr
   | IASTNodeVariable
   | IASTNodeUnary
+  | IASTNodeOrnament
   | IASTNodeBinary
   | IASTNodeGrouping
   | IASTNodeBlockExpression

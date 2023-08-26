@@ -45,6 +45,37 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
     }
     switch (node.type) {
       case NodeType.Literal: return node.value
+      case NodeType.OrnamentExpr:
+        const op = node.value[1]
+        const val = resolveAstNode(node.value[0])
+        switch (op.type) {
+          case Token.Length:
+            return Array.isArray(val)
+              ? val.length
+              : String(val).length
+          case Token.Minimum:
+          case Token.Maximum:
+          case Token.Sum:
+            if (!Array.isArray(val)) {
+              throw new Error(`Ornament "${op.lexeme}" must be applied to an array`)
+            }
+            if (val.length === 0) {
+              throw new Error(`Ornament "${op.lexeme}" can not be applied to an empty array`)
+            }
+            if (val.some((n) => typeof n !== 'number')) {
+              throw new Error(`Ornament "${op.lexeme}" can only be applied to arrays with numeric values`)
+            }
+            if (op.type === Token.Minimum) {
+              return Math.min(...val)
+            }
+            if (op.type === Token.Maximum) {
+              return Math.max(...val)
+            }
+            if (op.type === Token.Sum) {
+              return val.reduce((acc, n) => acc + n, 0)
+            }
+        }
+        throw new Error(`Unknown ornament: "${op.lexeme}"`)
       case NodeType.UnaryExpr: {
         const op = node.value[0]
         const ex = resolveAstNode(node.value[1])

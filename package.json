@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
     "sc": "ts-node --",
     "test": "uvu -r tsm tests"
   },

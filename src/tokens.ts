@@ -20,6 +20,7 @@ export enum Token {
   MinusEquals = 'MINUS_EQ',
   MultiplyEquals = 'MULT_EQ',
   DivideEquals = 'DIV_EQ',
+  Ornament = 'ORNAMENT',
 
   CurlyLeft = 'CURLY_L',
   CurlyRight = 'CURLY_R',
@@ -49,6 +50,11 @@ export enum Token {
   And = 'AND',
   Reject = 'REJECT',
   Validate = 'VALIDATE',
+
+  Length = 'LENGTH',
+  Minimum = 'MINIMUM',
+  Maximum = 'MAXIMUM',
+  Sum = 'SUM',
 }
 
 export const MATCHER = {
@@ -71,6 +77,7 @@ export const MATCHER = {
   [Token.Plus]: /^\+/,
   [Token.Minus]: /^-/,
   [Token.Assign]: /^=/, // @todo := to declare too?
+  [Token.Ornament]: /^:\b/,
   [Token.CurlyLeft]: /^\{/,
   [Token.CurlyRight]: /^\}/,
   [Token.ParenLeft]: /^\(/,
@@ -96,4 +103,9 @@ export const MATCHER = {
   [Token.And]: /^and\b/,
   [Token.Reject]: /^reject\b/,
   [Token.Validate]: /^validate\b/,
+
+  [Token.Length]: /^length\b/,
+  [Token.Minimum]: /^min(imum)?\b/,
+  [Token.Maximum]: /^max(imum)?\b/,
+  [Token.Sum]: /^sum\b/,
 }
