@@ -165,7 +165,7 @@ class Parser {
     const start = this.previous().offset
     const name = this.consume(Token.Identifier, 'Expected identifier')
     this.consume(Token.Assign, 'Expected initializer')
-    const value = this.parseExpression()
+    const value = this.parseStatement()
     return {
       type: NodeType.DeclareStatement,
       value: [ name, value ],
@@ -202,7 +202,7 @@ class Parser {
     const expr = this.parseOr()
     if (this.match(Token.Assign, Token.PlusEquals, Token.MinusEquals, Token.MultiplyEquals, Token.DivideEquals)) {
       const token = this.previous()
-      const value = this.parseAssignment()
+      const value = this.parseStatement()
       if (expr.type !== NodeType.Variable) {
         throw new Error('Invalid assignment')
       }
