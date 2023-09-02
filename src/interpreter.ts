@@ -122,6 +122,14 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       case NodeType.OrnamentExpr:
         const op = node.value[1]
         const val = resolveAstNode(node.value[0])
+        if (val instanceof Date) {
+          const v = val as Date
+          switch (op.type) {
+            case Token.UnitYears: return v.getFullYear()
+            case Token.UnitMonths: return v.getMonth() + 1
+            case Token.UnitDays: return v.getDate()
+          }
+        }
         switch (op.type) {
           case Token.Length:
             return Array.isArray(val)
@@ -165,11 +173,17 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       }
       case NodeType.BinaryExpr: {
         const op = node.value[1]
-        const left = resolveAstNode(node.value[0])?.valueOf()
-        const right = resolveAstNode(node.value[2])?.valueOf()
+        const a = resolveAstNode(node.value[0])
+        const b = resolveAstNode(node.value[2])
+        let wrap = (n: any) => n
+        if (a instanceof Date || b instanceof Date) {
+          wrap = (n: any) => new Date(n)
+        }
+        const left = a?.valueOf()
+        const right = b?.valueOf()
         switch (op.type) {
-          case Token.Plus: return left + right
-          case Token.Minus: return left - right
+          case Token.Plus: return wrap(left + right)
+          case Token.Minus: return wrap(left - right)
           case Token.Multiply: return left * right
           case Token.Divide: return left / right
           case Token.Greater: return left > right
@@ -367,7 +381,11 @@ export const createStack = () => {
       }
     }
     if (item?.mutable === false) {
-      return JSON.parse(JSON.stringify(item.value))
+      const copy = JSON.parse(JSON.stringify(item.value))
+      if (item.value instanceof Date) {
+        return new Date(copy)
+      }
+      return copy
     }
     return item?.value
   }
