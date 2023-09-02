@@ -139,4 +139,27 @@ test('dates', () => {
   assert.is(evaluate('now - 2 days < now'), true)
 })
 
+test('date ornaments', () => {
+  const dt = new Date()
+  assert.is(evaluate('now:year'), dt.getFullYear())
+  assert.is(evaluate('now:month'), dt.getMonth() + 1)
+  assert.is(evaluate('now:day'), dt.getDate())
+  assert.is(evaluate('(now - 10 years):year'), dt.getFullYear() - 10)
+  assert.is(evaluate('(now + 10 years):year'), dt.getFullYear() + 10)
+
+  const data = {
+    $release_date: new Date(2023, 5, 4), // 2023-06-04
+  }
+  assert.is(evaluate('$release_date:year == 2023', data), true)
+  assert.is(evaluate('$release_date:month == 6', data), true)
+  assert.is(evaluate('$release_date:day == 4', data), true)
+})
+
+test.skip('large-scale date math', () => {
+  const data = {
+    $release_date: new Date(2023, 5, 4),
+  }
+  assert.is(evaluate('let $date = $release_date - 5 months - 3 days\n$date:year+"-"+$date:month+"-"+$date:day', data), '2023-1-1')
+})
+
 test.run()
