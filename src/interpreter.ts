@@ -1,6 +1,49 @@
 import { IASTNode, NodeType } from './parser'
 import { Token } from './tokens'
 
+enum DurationUnit {
+  Second,
+  Minute,
+  Hour,
+  Day,
+  Week,
+  Month,
+  Year,
+}
+class Duration extends Number {
+  constructor (private value: number, private unit: DurationUnit) {
+    super(value)
+  }
+
+  private get _unitValue () {
+    switch (this.unit) {
+      case DurationUnit.Second: return 1_000
+      case DurationUnit.Minute: return 60 * 1_000
+      case DurationUnit.Hour: return 60 * 60 * 1_000
+      case DurationUnit.Day: return 24 * 60 * 60 * 1_000
+      case DurationUnit.Week: return 7 * 24 * 60 * 60 * 1_000
+      case DurationUnit.Month: return 30 * 24 * 60 * 60 * 1_000
+      case DurationUnit.Year: return 365 * 24 * 60 * 60 * 1_000
+    }
+  }
+
+  private get _product () {
+    return this.value * this._unitValue
+  }
+
+  public toJSON () {
+    return this._product
+  }
+
+  public valueOf () {
+    return this._product
+  }
+
+  [Symbol.toPrimitive] (_hint: string) {
+    return this._product
+  }
+}
+
 class RejectMessage extends Error {
   constructor (private _msg: string) {
     super(_msg)
@@ -48,14 +91,21 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       case NodeType.Measurement:
         const n = resolveAstNode(node.value[0])
         switch (node.value[1].type) {
-          case Token.UnitSeconds: return n * 1_000
-          case Token.UnitMinutes: return n * 60 * 1_000
-          case Token.UnitHours: return n * 60 * 60 * 1_000
-          case Token.UnitDays: return n * 24 * 60 * 60 * 1_000
-          case Token.UnitWeeks: return n * 7 * 24 * 60 * 60 * 1_000
+          // case Token.UnitSeconds: return n * 1_000
+          // case Token.UnitMinutes: return n * 60 * 1_000
+          // case Token.UnitHours: return n * 60 * 60 * 1_000
+          // case Token.UnitDays: return n * 24 * 60 * 60 * 1_000
+          // case Token.UnitWeeks: return n * 7 * 24 * 60 * 60 * 1_000
+          case Token.UnitSeconds: return new Duration(n, DurationUnit.Second)//return n * 1_000
+          case Token.UnitMinutes: return new Duration(n, DurationUnit.Minute)//return n * 60 * 1_000
+          case Token.UnitHours: return new Duration(n, DurationUnit.Hour)//return n * 60 * 60 * 1_000
+          case Token.UnitDays: return new Duration(n, DurationUnit.Day)//return n * 24 * 60 * 60 * 1_000
+          case Token.UnitWeeks: return new Duration(n, DurationUnit.Week)//return n * 7 * 24 * 60 * 60 * 1_000
           // Shaky time
-          case Token.UnitMonths: return n * 30 * 24 * 60 * 60 * 1_000
-          case Token.UnitYears: return n * 365 * 24 * 60 * 60 * 1_000
+          // case Token.UnitMonths: return n * 30 * 24 * 60 * 60 * 1_000
+          // case Token.UnitYears: return n * 365 * 24 * 60 * 60 * 1_000
+          case Token.UnitMonths: return new Duration(n, DurationUnit.Month)
+          case Token.UnitYears: return new Duration(n, DurationUnit.Year)
         }
         return n
       case NodeType.OrnamentExpr:
@@ -104,8 +154,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       }
       case NodeType.BinaryExpr: {
         const op = node.value[1]
-        const left = resolveAstNode(node.value[0])
-        const right = resolveAstNode(node.value[2])
+        const left = resolveAstNode(node.value[0])?.valueOf()
+        const right = resolveAstNode(node.value[2])?.valueOf()
         switch (op.type) {
           case Token.Plus: return left + right
           case Token.Minus: return left - right
@@ -243,7 +293,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         throw e
       }
     }
-    return output
+    return output?.valueOf?.() ?? output
   }
 
   const getScope = () => stack.dump()
