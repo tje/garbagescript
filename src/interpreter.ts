@@ -108,6 +108,17 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case Token.UnitYears: return new Duration(n, DurationUnit.Year)
         }
         return n
+      case NodeType.Date: return new Date()
+      case NodeType.RelativeDate: {
+        const dur = resolveAstNode(node.value[0])
+        let ts = Date.now()
+        if (node.value[1].type === Token.TimeAgo) {
+          ts -= dur.valueOf()
+        } else {
+          ts += dur.valueOf()
+        }
+        return new Date(ts)
+      }
       case NodeType.OrnamentExpr:
         const op = node.value[1]
         const val = resolveAstNode(node.value[0])

@@ -132,4 +132,11 @@ test('unit math', () => {
   assert.is(evaluate('1 hour / 2 == 30 minutes'), true)
 })
 
+test('dates', () => {
+  assert.is(evaluate('1 day ago < now'), true)
+  assert.is(evaluate('1 day ahead > now'), true)
+  assert.is(evaluate('now + 2 days > now'), true)
+  assert.is(evaluate('now - 2 days < now'), true)
+})
+
 test.run()

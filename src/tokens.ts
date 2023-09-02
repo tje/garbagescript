@@ -64,6 +64,9 @@ export enum Token {
   UnitWeeks = 'UNIT_WEEKS',
   UnitMonths = 'UNIT_MONTHS',
   UnitYears = 'UNIT_YEARS',
+  TimeAgo = 'TIME_AGO',
+  TimeAhead = 'TIME_AHEAD',
+  TimeNow = 'TIME_NOW',
 }
 
 export const MATCHER = {
@@ -132,4 +135,8 @@ export const MATCHER = {
   [Token.Minimum]: /^min(imum)?\b/,
   [Token.Maximum]: /^max(imum)?\b/,
   [Token.Sum]: /^sum\b/,
+
+  [Token.TimeAgo]: /^ago\b/,
+  [Token.TimeAhead]: /^(ahead|later|from\snow)\b/,
+  [Token.TimeNow]: /^(now|today)\b/,
 }

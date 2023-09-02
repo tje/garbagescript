@@ -350,6 +350,14 @@ class Parser {
         end: this.peek().offset,
       }
     }
+    if (this.match(Token.TimeNow)) {
+      return {
+        type: NodeType.Date,
+        value: new Date(),
+        start,
+        end: this.peek().offset,
+      }
+    }
     if (this.match(Token.NumberLiteral)) {
       const digit: IASTNode = {
         type: NodeType.Literal,
@@ -359,12 +367,21 @@ class Parser {
       }
       if (this.match(Token.UnitSeconds, Token.UnitMinutes, Token.UnitHours, Token.UnitDays, Token.UnitWeeks, Token.UnitMonths, Token.UnitYears)) {
         const unit = this.previous()
-        return {
+        const measurement: IASTNode = {
           type: NodeType.Measurement,
           value: [ digit, unit ],
           start,
           end: this.peek().offset,
         }
+        if (this.match(Token.TimeAgo, Token.TimeAhead)) {
+          return {
+            type: NodeType.RelativeDate,
+            value: [ measurement, this.previous() ],
+            start,
+            end: this.peek().offset,
+          }
+        }
+        return measurement
       }
       return digit
     }
@@ -497,6 +514,8 @@ export const generateAST = (tokens: IToken[]) => {
 export enum NodeType {
   Literal,
   Measurement,
+  Date,
+  RelativeDate,
   LogicalExpr,
   BinaryExpr,
   UnaryExpr,
@@ -525,6 +544,14 @@ type IASTNodeLiteral = {
 type IASTNodeMeasurement = {
   type: NodeType.Measurement
   value: [ IASTNode, IToken ]
+}
+type IASTNodeDate = {
+  type: NodeType.Date
+  value: Date
+}
+type IASTNodeRelativeDate = {
+  type: NodeType.RelativeDate
+  value: [ IASTNode & IASTNodeMeasurement, IToken ]
 }
 type IASTNodeLogicalExpr = {
   type: NodeType.LogicalExpr
@@ -601,6 +628,8 @@ type IASTNodeValidateStatement = {
 export type IASTNode = (
     IASTNodeLiteral
   | IASTNodeMeasurement
+  | IASTNodeDate
+  | IASTNodeRelativeDate
   | IASTNodeLogicalExpr
   | IASTNodeVariable
   | IASTNodeUnary
