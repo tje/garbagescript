@@ -351,12 +351,22 @@ class Parser {
       }
     }
     if (this.match(Token.NumberLiteral)) {
-      return {
+      const digit: IASTNode = {
         type: NodeType.Literal,
         value: parseFloat(this.previous().lexeme),
         start,
         end: this.peek().offset,
       }
+      if (this.match(Token.UnitSeconds, Token.UnitMinutes, Token.UnitHours, Token.UnitDays, Token.UnitWeeks, Token.UnitMonths, Token.UnitYears)) {
+        const unit = this.previous()
+        return {
+          type: NodeType.Measurement,
+          value: [ digit, unit ],
+          start,
+          end: this.peek().offset,
+        }
+      }
+      return digit
     }
     if (this.match(Token.StringLiteral)) {
       const t = this.previous().lexeme
@@ -486,6 +496,7 @@ export const generateAST = (tokens: IToken[]) => {
 
 export enum NodeType {
   Literal,
+  Measurement,
   LogicalExpr,
   BinaryExpr,
   UnaryExpr,
@@ -510,6 +521,10 @@ export enum NodeType {
 type IASTNodeLiteral = {
   type: NodeType.Literal
   value: string | number | boolean
+}
+type IASTNodeMeasurement = {
+  type: NodeType.Measurement
+  value: [ IASTNode, IToken ]
 }
 type IASTNodeLogicalExpr = {
   type: NodeType.LogicalExpr
@@ -585,6 +600,7 @@ type IASTNodeValidateStatement = {
 }
 export type IASTNode = (
     IASTNodeLiteral
+  | IASTNodeMeasurement
   | IASTNodeLogicalExpr
   | IASTNodeVariable
   | IASTNodeUnary

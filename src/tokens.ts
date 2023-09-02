@@ -50,11 +50,20 @@ export enum Token {
   And = 'AND',
   Reject = 'REJECT',
   Validate = 'VALIDATE',
+  Today = 'TODAY',
 
   Length = 'LENGTH',
   Minimum = 'MINIMUM',
   Maximum = 'MAXIMUM',
   Sum = 'SUM',
+
+  UnitSeconds = 'UNIT_SECONDS',
+  UnitMinutes = 'UNIT_MINUTES',
+  UnitHours = 'UNIT_HOURS',
+  UnitDays = 'UNIT_DAYS',
+  UnitWeeks = 'UNIT_WEEKS',
+  UnitMonths = 'UNIT_MONTHS',
+  UnitYears = 'UNIT_YEARS',
 }
 
 export const MATCHER = {
@@ -103,6 +112,21 @@ export const MATCHER = {
   [Token.And]: /^and\b/,
   [Token.Reject]: /^reject\b/,
   [Token.Validate]: /^validate\b/,
+
+  [Token.UnitSeconds]: /^seconds?\b/,
+  [Token.UnitMinutes]: /^minutes?\b/,
+  [Token.UnitHours]: /^hours?\b/,
+  [Token.UnitDays]: /^days?\b/,
+  [Token.UnitWeeks]: /^weeks?\b/,
+  [Token.UnitMonths]: /^months?\b/,
+  [Token.UnitYears]: /^years?\b/,
+  // [Token.UnitSeconds]: /^s(?:ec(?:ond)?s?)?\b/,
+  // [Token.UnitMinutes]: /^m(?:in(?:ute)?s?)?\b/,
+  // [Token.UnitHours]: /^h(?:(r|our)s?)?\b/,
+  // [Token.UnitDays]: /^d(?:ays?)?\b/,
+  // [Token.UnitWeeks]: /^w(?:ee)?(?:k)?s?\b/,
+  // [Token.UnitMonths]: /^mo(?:nth?)?s?\b/,
+  // [Token.UnitYears]: /^y(?:(r|ear)s?)?\b/,
 
   [Token.Length]: /^length\b/,
   [Token.Minimum]: /^min(imum)?\b/,

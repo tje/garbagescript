@@ -45,6 +45,19 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
     }
     switch (node.type) {
       case NodeType.Literal: return node.value
+      case NodeType.Measurement:
+        const n = resolveAstNode(node.value[0])
+        switch (node.value[1].type) {
+          case Token.UnitSeconds: return n * 1_000
+          case Token.UnitMinutes: return n * 60 * 1_000
+          case Token.UnitHours: return n * 60 * 60 * 1_000
+          case Token.UnitDays: return n * 24 * 60 * 60 * 1_000
+          case Token.UnitWeeks: return n * 7 * 24 * 60 * 60 * 1_000
+          // Shaky time
+          case Token.UnitMonths: return n * 30 * 24 * 60 * 60 * 1_000
+          case Token.UnitYears: return n * 365 * 24 * 60 * 60 * 1_000
+        }
+        return n
       case NodeType.OrnamentExpr:
         const op = node.value[1]
         const val = resolveAstNode(node.value[0])
