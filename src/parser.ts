@@ -91,6 +91,13 @@ class Parser {
         end: this.peek().offset,
       })
     }
+    if (this.match(Token.From)) {
+      const context = this.consume(Token.Identifier, 'Expected context identifier')
+      for (const value of values) {
+        const varNode = ((value as IASTNodeDeclareStatement).value[1] as IASTNodeVariable)
+        varNode.value = varNode.value.replace(/^__scope\./, `${context.lexeme}.`)
+      }
+    }
     return {
       type: NodeType.TakeStatement,
       value: values,

@@ -78,4 +78,11 @@ test('Variable variables not allowed', () => {
   assert.throws(() => evaluate(`let $one = "x"\nlet $var = "one"\n$$var`))
 })
 
+test('take property from object', () => {
+  const res = evaluate(`take $name from $person\n$name`, { $person: { $name: 'Lorem' } })
+  assert.is(res, 'Lorem')
+})
+
+test.skip('property accessor')
+
 test.run()

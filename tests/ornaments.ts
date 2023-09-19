@@ -23,6 +23,10 @@ test('array length', () => {
   assert.throws(() => evaluate(':length'))
 })
 
+test('array mutation side effects', () => {
+  assert.throws(() => evaluate('let $a = []\n$a:length = 2\n$a:length'))
+})
+
 test('number min', () => {
   const a = evaluate(`[1,2,3]:min`)
   const b = evaluate(`[3,2,1]:min`)
