@@ -1,5 +1,5 @@
-import { IToken } from './scanner'
-import { Token } from './tokens'
+import { IToken } from './scanner.js'
+import { Token } from './tokens.js'
 
 class Parser {
   private cursor: number = 0

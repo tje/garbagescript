@@ -1,4 +1,4 @@
-import { Token, MATCHER } from './tokens'
+import { Token, MATCHER } from './tokens.js'
 
 export function scanSource (source: string): [ IToken[], ScanError[] ] {
   let [ tokens, errs ] = extractTokens(formatSource(source))
@@ -80,8 +80,8 @@ export function extractTokens (source: string): [ IToken[], ScanError[] ]{
       const ctxIdx = err.ln - ctxStart
       const ctx = sourceLines.slice(ctxStart, ctxEnd)
       ctx.splice(ctxIdx + 1, 0, ' '.repeat(Math.max(0, err.col - 1)) + '\x1b[31m^-- ' + err.msg + '\x1b[0m')
-      console.error(`Error at line ${err.ln}, column ${err.col}:`)
-      console.error(ctx.join('\n'))
+      // console.error(`Error at line ${err.ln}, column ${err.col}:`)
+      // console.error(ctx.join('\n'))
     }
   }
 

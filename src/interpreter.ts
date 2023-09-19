@@ -1,5 +1,5 @@
-import { IASTNode, NodeType } from './parser'
-import { Token } from './tokens'
+import { IASTNode, NodeType } from './parser.js'
+import { Token } from './tokens.js'
 
 enum DurationUnit {
   Second,

@@ -1,6 +1,6 @@
-import { createInterpreter } from './interpreter'
-import { generateAST } from './parser'
-import { scanSource } from './scanner'
+import { createInterpreter } from './interpreter.js'
+import { generateAST } from './parser.js'
+import { scanSource } from './scanner.js'
 
 export const evaluate = (script: string, subjectData?: { [key: string]: any }) => {
   const [ tokens, errs ] = scanSource(script)
@@ -11,3 +11,7 @@ export const evaluate = (script: string, subjectData?: { [key: string]: any }) =
   const interpreter = createInterpreter({ subjectData })
   return interpreter.run(tree)
 }
+
+export { scanSource } from './scanner.js'
+export { Token } from './tokens.js'
+export { generateAST } from './parser.js'
