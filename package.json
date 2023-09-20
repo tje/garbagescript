@@ -11,7 +11,7 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "rm dist/* && tsc",
     "sc": "ts-node --",
     "test": "uvu -r tsm tests"
   },
