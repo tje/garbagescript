@@ -15,3 +15,4 @@ export const evaluate = (script: string, subjectData?: { [key: string]: any }) =
 export { scanSource } from './scanner.js'
 export { Token } from './tokens.js'
 export { generateAST } from './parser.js'
+export { createInterpreter } from './interpreter.js'

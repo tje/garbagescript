@@ -456,7 +456,7 @@ class Parser {
     }
 
     // console.log(this.peek())
-    throw new Error('Bad syntax')
+    throw new Error(`Bad syntax (${this.cursor})`, { cause: { prev: this.previous(), next: this.peek() } })
     // return {
     //   type: NodeType.Literal,
     //   value: -1,

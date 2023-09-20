@@ -45,12 +45,16 @@ class Duration extends Number {
 }
 
 class RejectMessage extends Error {
-  constructor (private _msg: string) {
+  constructor (private _msg: string, private _start: number, private _end: number) {
     super(_msg)
   }
 
   public get reason () {
     return this._msg
+  }
+
+  public get range () {
+    return [ this._start, this._end ]
   }
 }
 
@@ -272,7 +276,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         return
       }
       case NodeType.ValidateStatement: {
-        const errors = []
+        const errors: Array<{ reason: string, start: number, end: number }> = []
         let label = null
         if (node.value[1]) {
           label = resolveAstNode(node.value[1])
@@ -282,7 +286,11 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             resolveAstNode(statement)
           } catch (err) {
             if (err instanceof RejectMessage) {
-              errors.push(err.reason)
+              errors.push({
+                reason: err.reason,
+                start: err.range[0],
+                end: err.range[1],
+              })
             } else if (!options.ignoreErrors) {
               throw err
             }
@@ -297,7 +305,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       case NodeType.RejectStatement: {
         const value = resolveAstNode(node.value)
         if (value) {
-          throw new RejectMessage(value)
+          throw new RejectMessage(value, node.start, node.value.end)
         }
         return
       }
