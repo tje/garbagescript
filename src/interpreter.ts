@@ -78,6 +78,9 @@ type IInterpreterOptions = {
 export const createInterpreter = (options: IInterpreterOptions = {}) => {
   let cursor = 0
 
+  let validateCounter = 0
+  const rejects: RejectMessage[] = []
+
   const stack = createStack()
   if (options.subjectData) {
     for (const [ key, val ] of Object.entries(options.subjectData)) {
@@ -276,6 +279,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         return
       }
       case NodeType.ValidateStatement: {
+        validateCounter += 1
         const errors: Array<{ reason: string, start: number, end: number }> = []
         let label = null
         if (node.value[1]) {
@@ -296,6 +300,15 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             }
           }
         }
+        for (const reject of rejects) {
+          errors.push({
+            reason: reject.reason,
+            start: reject.range[0],
+            end: reject.range[1],
+          })
+          rejects.splice(0, rejects.length)
+        }
+        validateCounter -= 1
         return {
           passed: errors.length === 0,
           label,
@@ -305,7 +318,11 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       case NodeType.RejectStatement: {
         const value = resolveAstNode(node.value)
         if (value) {
-          throw new RejectMessage(value, node.start, node.value.end)
+          const err = new RejectMessage(value, node.start, node.value.end)
+          rejects.push(err)
+          if (validateCounter === 0) {
+            throw err
+          }
         }
         return
       }
