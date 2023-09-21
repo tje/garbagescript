@@ -1,6 +1,8 @@
 import { IASTNode, NodeType } from './parser.js'
 import { Token } from './tokens.js'
 
+const SymFanFn = Symbol('gs/fan')
+
 enum DurationUnit {
   Second,
   Minute,
@@ -223,25 +225,51 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         }
         const left = a?.valueOf()
         const right = b?.valueOf()
-        switch (op.type) {
-          case Token.Plus: return wrap(left + right)
-          case Token.Minus: return wrap(left - right)
-          case Token.Multiply: return left * right
-          case Token.Divide: return left / right
-          case Token.Greater: return left > right
-          case Token.GreaterEqual: return left >= right
-          case Token.Less: return left < right
-          case Token.LessEqual: return left <= right
-          case Token.Equals: return left == right
-          case Token.NotEquals: return left != right
-          case Token.Includes: return left?.includes?.(right)
-          case Token.Matches: return typeof left === 'string' && typeof right === 'string' && left.toLowerCase().includes(right.toLowerCase())
-          case Token.Of: return Array.isArray(right) && right.includes(left)
+        const cmp = (left: any, right: any) => {
+          switch (op.type) {
+            case Token.Plus: return wrap(left + right)
+            case Token.Minus: return wrap(left - right)
+            case Token.Multiply: return left * right
+            case Token.Divide: return left / right
+            case Token.Greater: return left > right
+            case Token.GreaterEqual: return left >= right
+            case Token.Less: return left < right
+            case Token.LessEqual: return left <= right
+            case Token.Equals: return left == right
+            case Token.NotEquals: return left != right
+            case Token.Includes: return left?.includes?.(right)
+            case Token.Matches: return typeof left === 'string' && typeof right === 'string' && left.toLowerCase().includes(right.toLowerCase())
+            case Token.Of: return Array.isArray(right) && right.includes(left)
+          }
+          if (options.ignoreErrors) {
+            return
+          }
+          throw new Error(`Unknown binary operator: "${op.lexeme}"`)
         }
-        if (options.ignoreErrors) {
-          return
+        if (a[SymFanFn]) {
+          return a[SymFanFn]((i: any) => cmp(i, right))
         }
-        throw new Error(`Unknown binary operator: "${op.lexeme}"`)
+        if (b[SymFanFn]) {
+          return b[SymFanFn]((i: any) => cmp(left, i))
+        }
+        return cmp(left, right)
+      }
+      case NodeType.MapExpr: {
+        const op = node.value[0]
+        const items = resolveAstNode(node.value[1])
+        if (op.type === Token.All) {
+          return {
+            [SymFanFn]: (cmp: any) => ([items].flat(1).filter(cmp).length === items.length),
+            valueOf: () => items,
+          }
+        }
+        if (op.type === Token.Any) {
+          return {
+            [SymFanFn]: (cmp: any) => ([items].flat(1).some(cmp)),
+            valueOf: () => items,
+          }
+        }
+        break
       }
       case NodeType.LogicalExpr: {
         const op = node.value[1]

@@ -330,7 +330,7 @@ class Parser {
     return this.parseOrnament()
   }
   private parseOrnament (): IASTNode {
-    let expr = this.parsePrimary()
+    let expr = this.parseMapExpr()
     while (this.match(Token.Ornament)) {
       const start = this.previous().offset
       if (!this.match(Token.Length, Token.Minimum, Token.Maximum, Token.Sum, Token.UnitYears, Token.UnitMonths, Token.UnitDays)) {
@@ -345,6 +345,19 @@ class Parser {
       }
     }
     return expr
+  }
+  private parseMapExpr (): IASTNode {
+    if (this.match(Token.Any, Token.All)) {
+      const op = this.previous()
+      const right = this.parsePrimary()
+      return {
+        type: NodeType.MapExpr,
+        value: [ op, right ],
+        start: op.offset,
+        end: this.peek().offset,
+      }
+    }
+    return this.parsePrimary()
   }
   private parsePrimary (): IASTNode {
     const start = this.peek().offset
@@ -526,6 +539,7 @@ export enum NodeType {
   LogicalExpr,
   BinaryExpr,
   UnaryExpr,
+  MapExpr,
   OrnamentExpr,
   Grouping,
   Variable,
@@ -574,6 +588,10 @@ type IASTNodeCollection = {
 }
 type IASTNodeUnary = {
   type: NodeType.UnaryExpr
+  value: [ IToken, IASTNode ]
+}
+type IASTNodeMapExr = {
+  type: NodeType.MapExpr
   value: [ IToken, IASTNode ]
 }
 type IASTNodeOrnament = {
@@ -640,6 +658,7 @@ export type IASTNode = (
   | IASTNodeLogicalExpr
   | IASTNodeVariable
   | IASTNodeUnary
+  | IASTNodeMapExr
   | IASTNodeOrnament
   | IASTNodeBinary
   | IASTNodeGrouping

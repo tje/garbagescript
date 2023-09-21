@@ -52,6 +52,8 @@ export enum Token {
   Reject = 'REJECT',
   Validate = 'VALIDATE',
   Today = 'TODAY',
+  Any = 'ANY',
+  All = 'ALL',
 
   Length = 'LENGTH',
   Minimum = 'MINIMUM',
@@ -117,6 +119,8 @@ export const MATCHER = {
   [Token.And]: /^and\b/,
   [Token.Reject]: /^reject\b/,
   [Token.Validate]: /^validate\b/,
+  [Token.Any]: /^any\b/,
+  [Token.All]: /^all\b/,
 
   [Token.UnitSeconds]: /^seconds?\b/,
   [Token.UnitMinutes]: /^minutes?\b/,
