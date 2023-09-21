@@ -44,7 +44,7 @@ class Duration extends Number {
   }
 }
 
-class RejectMessage extends Error {
+export class RejectMessage extends Error {
   constructor (private _msg: string, private _start: number, private _end: number) {
     super(_msg)
   }
@@ -55,6 +55,40 @@ class RejectMessage extends Error {
 
   public get range () {
     return [ this._start, this._end ]
+  }
+}
+
+export class ValidationResults {
+  constructor (private _errors: RejectMessage[], private _label?: string) {}
+
+  public get passed () {
+    return this._errors.length === 0
+  }
+
+  public get label () {
+    return this._label
+  }
+
+  public get errors () {
+    return this._errors.slice()
+  }
+}
+
+export class EvaluationResults {
+  constructor (private _output: any, private _validationResults: ValidationResults[]) {}
+
+  public get output () {
+    return this._output
+  }
+
+  public get validationResults () {
+    return this._validationResults.slice()
+  }
+
+  public get validationErrors () {
+    return this._validationResults
+      .map((vr) => vr.errors)
+      .flat()
   }
 }
 
@@ -80,6 +114,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
 
   let validateCounter = 0
   const rejects: RejectMessage[] = []
+  const validationResults: ValidationResults[] = []
 
   const stack = createStack()
   if (options.subjectData) {
@@ -289,31 +324,15 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           try {
             resolveAstNode(statement)
           } catch (err) {
-            if (err instanceof RejectMessage) {
-              errors.push({
-                reason: err.reason,
-                start: err.range[0],
-                end: err.range[1],
-              })
-            } else if (!options.ignoreErrors) {
+            if (!options.ignoreErrors) {
               throw err
             }
           }
         }
-        for (const reject of rejects) {
-          errors.push({
-            reason: reject.reason,
-            start: reject.range[0],
-            end: reject.range[1],
-          })
-          rejects.splice(0, rejects.length)
-        }
         validateCounter -= 1
-        return {
-          passed: errors.length === 0,
-          label,
-          errors,
-        }
+        const vr = new ValidationResults(rejects.splice(0, rejects.length), label)
+        validationResults.push(vr)
+        return vr
       }
       case NodeType.RejectStatement: {
         const value = resolveAstNode(node.value)
@@ -333,17 +352,20 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
     cursor = 0
     stack.flush()
     let output = null
-    for (const node of nodes) {
+    loop: for (const node of nodes) {
       try {
         output = resolveAstNode(node)
       } catch (e) {
         if (e instanceof StopEarly) {
-          return output
+          break loop
         }
         throw e
       }
     }
-    return output?.valueOf?.() ?? output
+    return new EvaluationResults(
+      output?.valueOf?.() ?? output,
+      validationResults.splice(0, validationResults.length),
+    )
   }
 
   const getScope = () => stack.dump()
