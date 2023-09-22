@@ -25,4 +25,4 @@ export const validate = (script: string, subjectData?: SubjectData) => {
 export { scanSource } from './scanner.js'
 export { Token } from './tokens.js'
 export { generateAST, ParseError } from './parser.js'
-export { createInterpreter } from './interpreter.js'
+export { createInterpreter, InterpreterError } from './interpreter.js'
