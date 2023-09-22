@@ -224,8 +224,17 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         const left = a?.valueOf()
         const right = b?.valueOf()
         switch (op.type) {
-          case Token.Plus: return wrap(left + right)
-          case Token.Minus: return wrap(left - right)
+          case Token.Plus:
+            if (Array.isArray(left)) {
+              return [ ...left.slice(), ...[right].flat(1) ]
+            }
+            return wrap(left + right)
+          case Token.Minus:
+            if (Array.isArray(left)) {
+              const other = [right].flat(1)
+              return left.filter((e) => !other.includes(e))
+            }
+            return wrap(left - right)
           case Token.Multiply: return left * right
           case Token.Divide: return left / right
           case Token.Greater: return left > right
@@ -277,8 +286,21 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         const { type } = node.value[2]
         const prev = stack.read(key)
         switch (type) {
-          case Token.PlusEquals: value = prev + value ; break
-          case Token.MinusEquals: value = prev - value ; break
+          case Token.PlusEquals:
+            if (Array.isArray(prev)) {
+              value = prev.slice().concat(...[value].flat(1))
+              break
+            }
+            value = prev + value
+          break
+          case Token.MinusEquals:
+            if (Array.isArray(prev)) {
+              const other = [value].flat(1)
+              value = prev.filter((e) => !other.includes(e))
+              break
+            }
+            value = prev - value
+          break
           case Token.MultiplyEquals: value = prev * value ; break
           case Token.DivideEquals: value = prev / value ; break
         }
