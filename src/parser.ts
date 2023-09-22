@@ -1,6 +1,26 @@
 import { IToken } from './scanner.js'
 import { Token } from './tokens.js'
 
+export class ParseError extends Error {
+  constructor (msg: string, private _token: number | IToken) {
+    super(msg)
+  }
+
+  get offset () {
+    if (typeof this._token === 'number') {
+      return this._token
+    }
+    return this._token.offset
+  }
+
+  get token () {
+    if (typeof this._token === 'number') {
+      return undefined
+    }
+    return this._token
+  }
+}
+
 class Parser {
   private cursor: number = 0
 
@@ -214,7 +234,7 @@ class Parser {
       const token = this.previous()
       const value = this.parseStatement()
       if (expr.type !== NodeType.Variable) {
-        throw new Error('Invalid assignment')
+        throw new ParseError('Invalid assignment', expr.start)
       }
       return {
         type: NodeType.AssignStatement,
@@ -337,7 +357,7 @@ class Parser {
     while (this.match(Token.Ornament)) {
       const start = this.previous().offset
       if (!this.match(Token.Length, Token.Minimum, Token.Maximum, Token.Sum, Token.UnitYears, Token.UnitMonths, Token.UnitDays)) {
-        throw new Error('Invalid ornament')
+        throw new ParseError('Invalid ornament', this.peek())
       }
       const op = this.previous()
       return {
@@ -473,7 +493,7 @@ class Parser {
     }
 
     // console.log(this.peek())
-    throw new Error(`Bad syntax (${this.cursor})`, { cause: { prev: this.previous(), next: this.peek() } })
+    throw new ParseError('Bad syntax', this.peek())
     // return {
     //   type: NodeType.Literal,
     //   value: -1,
@@ -488,7 +508,7 @@ class Parser {
     if (this.check(type)) {
       return this.advance()
     }
-    throw new Error(message)
+    throw new ParseError(message, this.peek())
   }
 
   private match (...types: Token[]): boolean {
