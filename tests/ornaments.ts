@@ -77,4 +77,28 @@ test('unrecognized ornaments', () => {
   assert.throws(() => evaluate(':nothing'))
 })
 
+test('string words', () => {
+  assert.equal(evaluate('"hello internet":words'), ['hello', 'internet'])
+  assert.equal(evaluate('"hello internet\ngood times":words'), ['hello', 'internet', 'good', 'times'])
+  assert.equal(evaluate('"\n\n\nhello internet\n\ngood times":words'), ['hello', 'internet', 'good', 'times'])
+})
+test('string lines', () => {
+  assert.equal(evaluate('"hello internet":lines'), ['hello internet'])
+  assert.equal(evaluate('"hello internet\ngood times":lines'), ['hello internet', 'good times'])
+  assert.equal(evaluate('"hello internet\n\ngood times":lines'), ['hello internet', '', 'good times'])
+  assert.equal(evaluate('"\nhello internet\ngood times\n\n":lines'), ['', 'hello internet', 'good times', '', ''])
+})
+test('string trim', () => {
+  assert.is(evaluate('" hello internet ":trim'), 'hello internet')
+  assert.is(evaluate('"     hello internet    ":trim'), 'hello internet')
+  assert.is(evaluate('"\nhello internet\n\n":trim'), 'hello internet')
+})
+
+test('array unique', () => {
+  assert.equal(evaluate('["a", "a", "b", "a", "c"]:unique'), ['a', 'b', 'c'])
+  assert.equal(evaluate('["a", "a", "a", "a"]:unique'), ['a'])
+  assert.equal(evaluate('[1, 2, 3, 1]:unique'), [1, 2, 3])
+  assert.equal(evaluate('let $x = "a"\n[$x, $x, "b", $x]:unique'), ['a', 'b'])
+})
+
 test.run()

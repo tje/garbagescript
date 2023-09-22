@@ -58,6 +58,10 @@ export enum Token {
   Minimum = 'MINIMUM',
   Maximum = 'MAXIMUM',
   Sum = 'SUM',
+  Words = 'WORDS',
+  Lines = 'LINES',
+  Unique = 'UNIQUE',
+  Trim = 'TRIM',
 
   UnitSeconds = 'UNIT_SECONDS',
   UnitMinutes = 'UNIT_MINUTES',
@@ -139,6 +143,10 @@ export const MATCHER = {
   [Token.Minimum]: /^min(imum)?\b/,
   [Token.Maximum]: /^max(imum)?\b/,
   [Token.Sum]: /^sum\b/,
+  [Token.Words]: /^words\b/,
+  [Token.Lines]: /^lines\b/,
+  [Token.Unique]: /^unique\b/,
+  [Token.Trim]: /^trim\b/,
 
   [Token.TimeAgo]: /^ago\b/,
   [Token.TimeAhead]: /^(ahead|later|from\snow)\b/,

@@ -356,7 +356,19 @@ class Parser {
     let expr = this.parseIdentifier()
     while (this.match(Token.Ornament)) {
       const start = this.previous().offset
-      if (!this.match(Token.Length, Token.Minimum, Token.Maximum, Token.Sum, Token.UnitYears, Token.UnitMonths, Token.UnitDays)) {
+      if (!this.match(
+        Token.Length,
+        Token.Minimum,
+        Token.Maximum,
+        Token.Sum,
+        Token.UnitYears,
+        Token.UnitMonths,
+        Token.UnitDays,
+        Token.Words,
+        Token.Lines,
+        Token.Trim,
+        Token.Unique,
+      )) {
         throw new ParseError('Invalid ornament', this.peek())
       }
       const op = this.previous()

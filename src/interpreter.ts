@@ -173,6 +173,25 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           }
         }
         switch (op.type) {
+          case Token.Trim:
+            if (typeof val !== 'string') {
+              throw new Error(`Ornament "${op.lexeme}" must be applied to a string`)
+            }
+            return val.trim()
+          case Token.Lines:
+          case Token.Words:
+            if (typeof val !== 'string') {
+              throw new Error(`Ornament "${op.lexeme}" must be applied to a string`)
+            }
+            if (op.type === Token.Words) {
+              return val.trim().split(/\s+/)
+            }
+            return val.split('\n')
+          case Token.Unique:
+            if (!Array.isArray(val)) {
+              throw new Error(`Ornament "${op.lexeme}" must be applied to an array`)
+            }
+            return val.filter((v, idx, a) => a.indexOf(v) === idx)
           case Token.Length:
             return Array.isArray(val)
               ? val.length
