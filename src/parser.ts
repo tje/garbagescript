@@ -372,7 +372,7 @@ class Parser {
         throw new ParseError('Invalid ornament', this.peek())
       }
       const op = this.previous()
-      return {
+      expr = {
         type: NodeType.OrnamentExpr,
         value: [ expr, op ],
         start,

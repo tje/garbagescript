@@ -101,4 +101,8 @@ test('array unique', () => {
   assert.equal(evaluate('let $x = "a"\n[$x, $x, "b", $x]:unique'), ['a', 'b'])
 })
 
+test('length of unique words', () => {
+  assert.is(evaluate('"one one one two three":words:unique:length'), 3)
+})
+
 test.run()
