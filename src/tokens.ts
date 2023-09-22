@@ -29,6 +29,7 @@ export enum Token {
   BraceLeft = 'BRACE_L',
   BraceRight = 'BRACE_R',
   Comma = 'COMMA',
+  Dot = 'DOT',
 
   Identifier = 'IDENT',
   NumberLiteral = 'NUMBER',
@@ -98,6 +99,7 @@ export const MATCHER = {
   [Token.BraceLeft]: /^\[/,
   [Token.BraceRight]: /^\]/,
   [Token.Comma]: /^,/,
+  [Token.Dot]: /^\./,
   [Token.Let]: /^let\b/,
   [Token.Identifier]: /^\$[a-zA-Z_\d]+/,
   [Token.NumberLiteral]: /^[\d]+[\d_]*(\.[\d_]*)?/,

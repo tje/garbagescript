@@ -92,10 +92,13 @@ class Parser {
       })
     }
     if (this.match(Token.From)) {
-      const context = this.consume(Token.Identifier, 'Expected context identifier')
+      let context = this.consume(Token.Identifier, 'Expected context identifier').lexeme
+      while (this.match(Token.Dot)) {
+        context += '.' + this.consume(Token.Identifier, 'Expected property identifier').lexeme
+      }
       for (const value of values) {
         const varNode = ((value as IASTNodeDeclareStatement).value[1] as IASTNodeVariable)
-        varNode.value = varNode.value.replace(/^__scope\./, `${context.lexeme}.`)
+        varNode.value = varNode.value.replace(/^__scope\./, `${context}.`)
       }
     }
     return {
@@ -330,7 +333,7 @@ class Parser {
     return this.parseOrnament()
   }
   private parseOrnament (): IASTNode {
-    let expr = this.parsePrimary()
+    let expr = this.parseIdentifier()
     while (this.match(Token.Ornament)) {
       const start = this.previous().offset
       if (!this.match(Token.Length, Token.Minimum, Token.Maximum, Token.Sum, Token.UnitYears, Token.UnitMonths, Token.UnitDays)) {
@@ -345,6 +348,29 @@ class Parser {
       }
     }
     return expr
+  }
+  private parseIdentifier (): IASTNode {
+    if (this.match(Token.Identifier)) {
+      const start = this.previous().offset
+      const value = this.previous().lexeme
+      let expr: IASTNode = {
+        type: NodeType.Variable,
+        value,
+        start,
+        end: this.peek().offset,
+      }
+      while (this.match(Token.Dot)) {
+        const property = this.consume(Token.Identifier, 'Expected identifier')
+        expr = {
+          type: NodeType.Property,
+          value: [ property, expr ],
+          start: this.previous().offset,
+          end: this.peek().offset,
+        }
+      }
+      return expr
+    }
+    return this.parsePrimary()
   }
   private parsePrimary (): IASTNode {
     const start = this.peek().offset
@@ -397,15 +423,6 @@ class Parser {
       return {
         type: NodeType.Literal,
         value: t.substring(1, t.length - 1),
-        start,
-        end: this.peek().offset,
-      }
-    }
-    if (this.match(Token.Identifier)) {
-      const value = this.previous().lexeme
-      return {
-        type: NodeType.Variable,
-        value,
         start,
         end: this.peek().offset,
       }
@@ -529,6 +546,7 @@ export enum NodeType {
   OrnamentExpr,
   Grouping,
   Variable,
+  Property,
   BlockExpr,
   Collection,
 
@@ -567,6 +585,10 @@ type IASTNodeLogicalExpr = {
 type IASTNodeVariable = {
   type: NodeType.Variable
   value: string
+}
+type IASTNodeProperty = {
+  type: NodeType.Property
+  value: [ IToken, IASTNode ]
 }
 type IASTNodeCollection = {
   type: NodeType.Collection
@@ -639,6 +661,7 @@ export type IASTNode = (
   | IASTNodeRelativeDate
   | IASTNodeLogicalExpr
   | IASTNodeVariable
+  | IASTNodeProperty
   | IASTNodeUnary
   | IASTNodeOrnament
   | IASTNodeBinary

@@ -83,6 +83,4 @@ test('take property from object', () => {
   assert.is(res, 'Lorem')
 })
 
-test.skip('property accessor')
-
 test.run()

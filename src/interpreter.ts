@@ -255,6 +255,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         return resolveAstNode(node.value[2])
       }
       case NodeType.Variable: return stack.read(node.value)
+      case NodeType.Property: return resolveAstNode(node.value[1])?.[node.value[0].lexeme]
       case NodeType.BlockExpr: {
         stack.push()
         const out = resolveAstNode(node.value as IASTNode)
