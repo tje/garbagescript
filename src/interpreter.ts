@@ -173,6 +173,14 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           }
         }
         switch (op.type) {
+          case Token.Uppercase:
+          case Token.Lowercase:
+            if (typeof val !== 'string') {
+              throw new Error(`Ornament "${op.lexeme}" must be applied to a string`)
+            }
+            return op.type === Token.Uppercase
+              ? val.toUpperCase()
+              : val.toLowerCase()
           case Token.Trim:
             if (typeof val !== 'string') {
               throw new Error(`Ornament "${op.lexeme}" must be applied to a string`)

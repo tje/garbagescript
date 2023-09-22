@@ -62,6 +62,8 @@ export enum Token {
   Lines = 'LINES',
   Unique = 'UNIQUE',
   Trim = 'TRIM',
+  Uppercase = 'UPPERCASE',
+  Lowercase = 'LOWERCASE',
 
   UnitSeconds = 'UNIT_SECONDS',
   UnitMinutes = 'UNIT_MINUTES',
@@ -147,6 +149,8 @@ export const MATCHER = {
   [Token.Lines]: /^lines\b/,
   [Token.Unique]: /^unique\b/,
   [Token.Trim]: /^trim\b/,
+  [Token.Uppercase]: /^upper(case)?\b/,
+  [Token.Lowercase]: /^lower(case)?\b/,
 
   [Token.TimeAgo]: /^ago\b/,
   [Token.TimeAhead]: /^(ahead|later|from\snow)\b/,

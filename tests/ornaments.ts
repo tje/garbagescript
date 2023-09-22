@@ -93,6 +93,16 @@ test('string trim', () => {
   assert.is(evaluate('"     hello internet    ":trim'), 'hello internet')
   assert.is(evaluate('"\nhello internet\n\n":trim'), 'hello internet')
 })
+test('string upper', () => {
+  assert.is(evaluate('"hello internet":upper'), 'HELLO INTERNET')
+  assert.is(evaluate('"hello internet":uppercase'), 'HELLO INTERNET')
+  assert.is(evaluate('"Hello Internet 123":uppercase'), 'HELLO INTERNET 123')
+})
+test('string lower', () => {
+  assert.is(evaluate('"HELLO INTERNET":lower'), 'hello internet')
+  assert.is(evaluate('"HELLO INTERNET":lowercase'), 'hello internet')
+  assert.is(evaluate('"Hello Internet 123":lowercase'), 'hello internet 123')
+})
 
 test('array unique', () => {
   assert.equal(evaluate('["a", "a", "b", "a", "c"]:unique'), ['a', 'b', 'c'])
