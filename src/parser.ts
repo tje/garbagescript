@@ -372,23 +372,17 @@ class Parser {
   private parseIdentifier (): IASTNode {
     if (this.match(Token.Identifier)) {
       const start = this.previous().offset
-      const value = this.previous().lexeme
-      let expr: IASTNode = {
+      let value = this.previous().lexeme
+      while (this.match(Token.Dot)) {
+        const property = this.consume(Token.Identifier, 'Expected identifier')
+        value += '.' + property.lexeme
+      }
+      return {
         type: NodeType.Variable,
         value,
         start,
         end: this.peek().offset,
       }
-      while (this.match(Token.Dot)) {
-        const property = this.consume(Token.Identifier, 'Expected identifier')
-        expr = {
-          type: NodeType.Property,
-          value: [ property, expr ],
-          start: this.previous().offset,
-          end: this.peek().offset,
-        }
-      }
-      return expr
     }
     return this.parsePrimary()
   }
@@ -566,7 +560,6 @@ export enum NodeType {
   OrnamentExpr,
   Grouping,
   Variable,
-  Property,
   BlockExpr,
   Collection,
 
@@ -605,10 +598,6 @@ type IASTNodeLogicalExpr = {
 type IASTNodeVariable = {
   type: NodeType.Variable
   value: string
-}
-type IASTNodeProperty = {
-  type: NodeType.Property
-  value: [ IToken, IASTNode ]
 }
 type IASTNodeCollection = {
   type: NodeType.Collection
@@ -681,7 +670,6 @@ export type IASTNode = (
   | IASTNodeRelativeDate
   | IASTNodeLogicalExpr
   | IASTNodeVariable
-  | IASTNodeProperty
   | IASTNodeUnary
   | IASTNodeOrnament
   | IASTNodeBinary
