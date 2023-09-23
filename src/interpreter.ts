@@ -341,7 +341,11 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       case NodeType.DeclareStatement: {
         const key = node.value[0].lexeme
         const value = resolveAstNode(node.value[1])
-        stack.write(key, value)
+        try {
+          stack.write(key, value)
+        } catch (err: any) {
+          pitchError(err.toString(), node)
+        }
         return value
       }
       case NodeType.AssignStatement: {
@@ -368,7 +372,11 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case Token.MultiplyEquals: value = prev * value ; break
           case Token.DivideEquals: value = prev / value ; break
         }
-        stack.write(key, value, { mode: 'update' })
+        try {
+          stack.write(key, value, { mode: 'update' })
+        } catch (err: any) {
+          pitchError(err.toString(), node)
+        }
         return value
       }
       case NodeType.IfStatement: {
