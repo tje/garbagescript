@@ -75,7 +75,7 @@ export class ValidationResults {
 }
 
 export class EvaluationResults {
-  constructor (private _output: any, private _validationResults: ValidationResults[], private _errors: InterpreterError[]) {}
+  constructor (private _output: any, private _validationResults: ValidationResults[], private _diagnostics: InterpreterDiagnostic[]) {}
 
   public get output () {
     return this._output
@@ -91,8 +91,8 @@ export class EvaluationResults {
       .flat()
   }
 
-  public get runtimeErrors () {
-    return this._errors.slice()
+  public get diagnostics () {
+    return this._diagnostics.slice()
   }
 }
 
@@ -102,8 +102,13 @@ class StopEarly extends Error {
   }
 }
 
-export class InterpreterError extends Error {
-  constructor (msg: string, private _node: IASTNode) {
+export enum DiagnosticSeverity {
+  Error = 'error',
+  Warning = 'warning',
+}
+
+export class InterpreterDiagnostic extends Error {
+  constructor (msg: string, private _node: IASTNode, private _severity = DiagnosticSeverity.Error) {
     super(msg)
   }
 
@@ -113,6 +118,10 @@ export class InterpreterError extends Error {
 
   get node () {
     return this._node
+  }
+
+  get severity () {
+    return this._severity
   }
 }
 
@@ -133,7 +142,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
   let validateCounter = 0
   const rejects: RejectMessage[] = []
   const validationResults: ValidationResults[] = []
-  const errors: InterpreterError[] = []
+  const diagnostics: InterpreterDiagnostic[] = []
 
   const stack = createStack()
   if (options.subjectData) {
@@ -142,13 +151,12 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
     }
   }
 
-  const pitchError = (msg: string, node: IASTNode) => {
-    const err = new InterpreterError(msg, node)
-    if (options.ignoreErrors) {
-      errors.push(err)
-      return
+  const pitchDiagnostic = (msg: string, node: IASTNode, severity = DiagnosticSeverity.Error) => {
+    const err = new InterpreterDiagnostic(msg, node, severity)
+    diagnostics.push(err)
+    if (severity === DiagnosticSeverity.Error && !options.ignoreErrors) {
+      throw err
     }
-    throw err
   }
 
   const resolveAstNode = (node: IASTNode): any => {
@@ -204,7 +212,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case Token.Uppercase:
           case Token.Lowercase:
             if (typeof val !== 'string') {
-              pitchError(`Ornament "${op.lexeme}" must be applied to a string`, node)
+              pitchDiagnostic(`Ornament "${op.lexeme}" must be applied to a string`, node)
               return undefined
             }
             return op.type === Token.Uppercase
@@ -212,14 +220,14 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
               : val.toLowerCase()
           case Token.Trim:
             if (typeof val !== 'string') {
-              pitchError(`Ornament "${op.lexeme}" must be applied to a string`, node)
+              pitchDiagnostic(`Ornament "${op.lexeme}" must be applied to a string`, node)
               return undefined
             }
             return val.trim()
           case Token.Lines:
           case Token.Words:
             if (typeof val !== 'string') {
-              pitchError(`Ornament "${op.lexeme}" must be applied to a string`, node)
+              pitchDiagnostic(`Ornament "${op.lexeme}" must be applied to a string`, node)
               return undefined
             }
             if (op.type === Token.Words) {
@@ -228,7 +236,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             return val.split('\n')
           case Token.Unique:
             if (!Array.isArray(val)) {
-              pitchError(`Ornament "${op.lexeme}" must be applied to an array`, node)
+              pitchDiagnostic(`Ornament "${op.lexeme}" must be applied to an array`, node)
               return undefined
             }
             return val.filter((v, idx, a) => a.indexOf(v) === idx)
@@ -240,15 +248,15 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case Token.Maximum:
           case Token.Sum:
             if (!Array.isArray(val)) {
-              pitchError(`Ornament "${op.lexeme}" must be applied to an array`, node)
+              pitchDiagnostic(`Ornament "${op.lexeme}" must be applied to an array`, node)
               return undefined
             }
             if (val.length === 0) {
-              pitchError(`Ornament "${op.lexeme}" can not be applied to an empty array`, node)
+              pitchDiagnostic(`Ornament "${op.lexeme}" can not be applied to an empty array`, node)
               return undefined
             }
             if (val.some((n) => typeof n !== 'number')) {
-              pitchError(`Ornament "${op.lexeme}" can only be applied to arrays with numeric values`, node)
+              pitchDiagnostic(`Ornament "${op.lexeme}" can only be applied to arrays with numeric values`, node)
               return undefined
             }
             if (op.type === Token.Minimum) {
@@ -261,7 +269,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
               return val.reduce((acc, n) => acc + n, 0)
             }
         }
-        pitchError(`Unknown ornament: "${op.lexeme}"`, node)
+        pitchDiagnostic(`Unknown ornament: "${op.lexeme}"`, node)
         return val
       case NodeType.UnaryExpr: {
         const op = node.value[0]
@@ -271,7 +279,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         } else if (op.type === Token.Minus) {
           return ex * -1
         }
-        pitchError(`Unknown unary operator: "${op.lexeme}"`, node)
+        pitchDiagnostic(`Unknown unary operator: "${op.lexeme}"`, node)
         return ex
       }
       case NodeType.BinaryExpr: {
@@ -284,6 +292,42 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         }
         const left = a?.valueOf()
         const right = b?.valueOf()
+
+        // Type mismatch
+        switch (op.type) {
+          case Token.Multiply:
+          case Token.Divide:
+          case Token.Greater:
+          case Token.GreaterEqual:
+          case Token.Less:
+          case Token.LessEqual:
+            if (isNaN(left)) {
+              pitchDiagnostic(`Expected a number, got "${typeof left}" instead`, node.value[0], DiagnosticSeverity.Warning)
+            }
+            if (isNaN(right)) {
+              pitchDiagnostic(`Expected a number, got "${typeof right}" instead`, node.value[2], DiagnosticSeverity.Warning)
+            }
+          break
+          case Token.Includes:
+            if (!Array.isArray(left)) {
+              pitchDiagnostic(`Expected an array, got "${typeof left}" instead`, node.value[0], DiagnosticSeverity.Warning)
+            }
+          break
+          case Token.Matches:
+            if (typeof left !== 'string') {
+              pitchDiagnostic(`Expected a string, got "${typeof left}" instead`, node.value[0], DiagnosticSeverity.Warning)
+            }
+            if (typeof right !== 'string') {
+              pitchDiagnostic(`Expected a string, got "${typeof right}" instead`, node.value[2], DiagnosticSeverity.Warning)
+            }
+          break
+          case Token.Of:
+            if (!Array.isArray(right)) {
+              pitchDiagnostic(`Expected an array, got "${typeof right}" instead`, node.value[2], DiagnosticSeverity.Warning)
+            }
+          break
+        }
+
         switch (op.type) {
           case Token.Plus:
             if (Array.isArray(left)) {
@@ -308,7 +352,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case Token.Matches: return typeof left === 'string' && typeof right === 'string' && left.toLowerCase().includes(right.toLowerCase())
           case Token.Of: return Array.isArray(right) && right.includes(left)
         }
-        pitchError(`Unknown binary operator: "${op.lexeme}"`, node)
+        pitchDiagnostic(`Unknown binary operator: "${op.lexeme}"`, node)
         return undefined
       }
       case NodeType.LogicalExpr: {
@@ -325,7 +369,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       case NodeType.Variable:
         const value = stack.read(node.value)
         if (value === undefined) {
-          pitchError(`Undefined variable: ${node.value}`, node)
+          pitchDiagnostic(`Undefined variable: ${node.value}`, node)
         }
         return value
       case NodeType.BlockExpr: {
@@ -344,13 +388,14 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         try {
           stack.write(key, value)
         } catch (err: any) {
-          pitchError(err.toString(), node)
+          pitchDiagnostic(err.toString(), node)
         }
         return value
       }
       case NodeType.AssignStatement: {
         const key = node.value[0]
-        let value = resolveAstNode(node.value[1])
+        const initialValue = resolveAstNode(node.value[1])
+        let value = initialValue
         const { type } = node.value[2]
         const prev = stack.read(key)
         switch (type) {
@@ -372,10 +417,13 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case Token.MultiplyEquals: value = prev * value ; break
           case Token.DivideEquals: value = prev / value ; break
         }
+        if (typeof initialValue !== typeof value) {
+          pitchDiagnostic(`Variable type changed from "${typeof initialValue}" to "${typeof value}"`, node, DiagnosticSeverity.Warning)
+        }
         try {
           stack.write(key, value, { mode: 'update' })
         } catch (err: any) {
-          pitchError(err.toString(), node)
+          pitchDiagnostic(err.toString(), node)
         }
         return value
       }
@@ -392,7 +440,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         const items = resolveAstNode(node.value[0])
         const out = []
         if (!Array.isArray(items)) {
-          pitchError('Not iterable', node.value[0])
+          pitchDiagnostic('Not iterable', node.value[0])
           return []
         }
         for (const item of items) {
@@ -463,7 +511,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
     return new EvaluationResults(
       output?.valueOf?.() ?? output,
       validationResults.splice(0, validationResults.length),
-      errors,
+      diagnostics,
     )
   }
 
