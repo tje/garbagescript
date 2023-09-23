@@ -83,4 +83,8 @@ test('take property from object', () => {
   assert.is(res, 'Lorem')
 })
 
+test('throw on undefined reference', () => {
+  assert.throws(() => evaluate('$something'))
+})
+
 test.run()

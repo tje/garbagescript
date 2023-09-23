@@ -75,7 +75,7 @@ export class ValidationResults {
 }
 
 export class EvaluationResults {
-  constructor (private _output: any, private _validationResults: ValidationResults[]) {}
+  constructor (private _output: any, private _validationResults: ValidationResults[], private _errors: InterpreterError[]) {}
 
   public get output () {
     return this._output
@@ -89,6 +89,10 @@ export class EvaluationResults {
     return this._validationResults
       .map((vr) => vr.errors)
       .flat()
+  }
+
+  public get runtimeErrors () {
+    return this._errors.slice()
   }
 }
 
@@ -129,12 +133,22 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
   let validateCounter = 0
   const rejects: RejectMessage[] = []
   const validationResults: ValidationResults[] = []
+  const errors: InterpreterError[] = []
 
   const stack = createStack()
   if (options.subjectData) {
     for (const [ key, val ] of Object.entries(options.subjectData)) {
       stack.write(key, val, { mutable: false })
     }
+  }
+
+  const pitchError = (msg: string, node: IASTNode) => {
+    const err = new InterpreterError(msg, node)
+    if (options.ignoreErrors) {
+      errors.push(err)
+      return
+    }
+    throw err
   }
 
   const resolveAstNode = (node: IASTNode): any => {
@@ -190,20 +204,23 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case Token.Uppercase:
           case Token.Lowercase:
             if (typeof val !== 'string') {
-              throw new InterpreterError(`Ornament "${op.lexeme}" must be applied to a string`, node)
+              pitchError(`Ornament "${op.lexeme}" must be applied to a string`, node)
+              return undefined
             }
             return op.type === Token.Uppercase
               ? val.toUpperCase()
               : val.toLowerCase()
           case Token.Trim:
             if (typeof val !== 'string') {
-              throw new InterpreterError(`Ornament "${op.lexeme}" must be applied to a string`, node)
+              pitchError(`Ornament "${op.lexeme}" must be applied to a string`, node)
+              return undefined
             }
             return val.trim()
           case Token.Lines:
           case Token.Words:
             if (typeof val !== 'string') {
-              throw new InterpreterError(`Ornament "${op.lexeme}" must be applied to a string`, node)
+              pitchError(`Ornament "${op.lexeme}" must be applied to a string`, node)
+              return undefined
             }
             if (op.type === Token.Words) {
               return val.trim().split(/\s+/)
@@ -211,7 +228,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             return val.split('\n')
           case Token.Unique:
             if (!Array.isArray(val)) {
-              throw new InterpreterError(`Ornament "${op.lexeme}" must be applied to an array`, node)
+              pitchError(`Ornament "${op.lexeme}" must be applied to an array`, node)
+              return undefined
             }
             return val.filter((v, idx, a) => a.indexOf(v) === idx)
           case Token.Length:
@@ -222,13 +240,16 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case Token.Maximum:
           case Token.Sum:
             if (!Array.isArray(val)) {
-              throw new InterpreterError(`Ornament "${op.lexeme}" must be applied to an array`, node)
+              pitchError(`Ornament "${op.lexeme}" must be applied to an array`, node)
+              return undefined
             }
             if (val.length === 0) {
-              throw new InterpreterError(`Ornament "${op.lexeme}" can not be applied to an empty array`, node)
+              pitchError(`Ornament "${op.lexeme}" can not be applied to an empty array`, node)
+              return undefined
             }
             if (val.some((n) => typeof n !== 'number')) {
-              throw new InterpreterError(`Ornament "${op.lexeme}" can only be applied to arrays with numeric values`, node)
+              pitchError(`Ornament "${op.lexeme}" can only be applied to arrays with numeric values`, node)
+              return undefined
             }
             if (op.type === Token.Minimum) {
               return Math.min(...val)
@@ -240,7 +261,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
               return val.reduce((acc, n) => acc + n, 0)
             }
         }
-        throw new InterpreterError(`Unknown ornament: "${op.lexeme}"`, node)
+        pitchError(`Unknown ornament: "${op.lexeme}"`, node)
+        return val
       case NodeType.UnaryExpr: {
         const op = node.value[0]
         const ex = resolveAstNode(node.value[1])
@@ -249,10 +271,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         } else if (op.type === Token.Minus) {
           return ex * -1
         }
-        if (options.ignoreErrors) {
-          return
-        }
-        throw new InterpreterError(`Unknown unary operator: "${op.lexeme}"`, node)
+        pitchError(`Unknown unary operator: "${op.lexeme}"`, node)
+        return ex
       }
       case NodeType.BinaryExpr: {
         const op = node.value[1]
@@ -288,10 +308,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case Token.Matches: return typeof left === 'string' && typeof right === 'string' && left.toLowerCase().includes(right.toLowerCase())
           case Token.Of: return Array.isArray(right) && right.includes(left)
         }
-        if (options.ignoreErrors) {
-          return
-        }
-        throw new InterpreterError(`Unknown binary operator: "${op.lexeme}"`, node)
+        pitchError(`Unknown binary operator: "${op.lexeme}"`, node)
+        return undefined
       }
       case NodeType.LogicalExpr: {
         const op = node.value[1]
@@ -304,7 +322,12 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         }
         return resolveAstNode(node.value[2])
       }
-      case NodeType.Variable: return stack.read(node.value)
+      case NodeType.Variable:
+        const value = stack.read(node.value)
+        if (value === undefined) {
+          pitchError(`Undefined variable: ${node.value}`, node)
+        }
+        return value
       case NodeType.BlockExpr: {
         stack.push()
         const out = resolveAstNode(node.value as IASTNode)
@@ -361,7 +384,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         const items = resolveAstNode(node.value[0])
         const out = []
         if (!Array.isArray(items)) {
-          throw new InterpreterError('Not iterable', node.value[0])
+          pitchError('Not iterable', node.value[0])
+          return []
         }
         for (const item of items) {
           stack.push()
@@ -431,6 +455,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
     return new EvaluationResults(
       output?.valueOf?.() ?? output,
       validationResults.splice(0, validationResults.length),
+      errors,
     )
   }
 
