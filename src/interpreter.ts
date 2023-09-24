@@ -394,8 +394,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       }
       case NodeType.AssignStatement: {
         const key = node.value[0]
-        const initialValue = resolveAstNode(node.value[1])
-        let value = initialValue
+        let value = resolveAstNode(node.value[1])
         const { type } = node.value[2]
         const prev = stack.read(key)
         switch (type) {
@@ -417,8 +416,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case Token.MultiplyEquals: value = prev * value ; break
           case Token.DivideEquals: value = prev / value ; break
         }
-        if (typeof initialValue !== typeof value) {
-          pitchDiagnostic(`Variable type changed from "${typeof initialValue}" to "${typeof value}"`, node, DiagnosticSeverity.Warning)
+        if (typeof prev !== typeof value) {
+          pitchDiagnostic(`Variable type changed from "${typeof prev}" to "${typeof value}"`, node, DiagnosticSeverity.Warning)
         }
         try {
           stack.write(key, value, { mode: 'update' })
