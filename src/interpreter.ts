@@ -252,6 +252,14 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
               pitchDiagnostic(`Ornament "${op.lexeme}" is intended to be used with strings and arrays, but was applied to something unexpected here (${typeof val})`, node, DiagnosticSeverity.Warning)
             }
             return String(val).length
+          case Token.Reverse:
+            if (Array.isArray(val)) {
+              return val.slice().reverse()
+            }
+            if (typeof val !== 'string') {
+              pitchDiagnostic(`Ornament "${op.lexeme}" is intended to be used with strings and arrays, but was applied to something unexpected here (${typeof val})`, node, DiagnosticSeverity.Warning)
+            }
+            return String(val).split('').reverse().join('')
           case Token.Minimum:
           case Token.Maximum:
           case Token.Sum:

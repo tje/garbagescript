@@ -66,6 +66,7 @@ export enum Token {
   Trim = 'TRIM',
   Uppercase = 'UPPERCASE',
   Lowercase = 'LOWERCASE',
+  Reverse = 'REVERSE',
 
   UnitSeconds = 'UNIT_SECONDS',
   UnitMinutes = 'UNIT_MINUTES',
@@ -155,6 +156,7 @@ export const MATCHER = {
   [Token.Trim]: /^trim\b/,
   [Token.Uppercase]: /^upper(case)?\b/,
   [Token.Lowercase]: /^lower(case)?\b/,
+  [Token.Reverse]: /^reverse\b/,
 
   [Token.TimeAgo]: /^ago\b/,
   [Token.TimeAhead]: /^(ahead|later|from\snow)\b/,

@@ -115,6 +115,14 @@ test('array unique', () => {
   assert.equal(evaluate('let $x = "a"\n[$x, $x, "b", $x]:unique'), ['a', 'b'])
 })
 
+test('string reverse', () => {
+  assert.is(evaluate('"hello":reverse'), 'olleh')
+})
+test('array reverse', () => {
+  assert.equal(evaluate('["a", "b", "c"]:reverse'), ['c', 'b', 'a'])
+  assert.not.equal(evaluate('["a", "b", "c"]:reverse'), ['a', 'b', 'c'])
+})
+
 test('length of unique words', () => {
   assert.is(evaluate('"one one one two three":words:unique:length'), 3)
 })
