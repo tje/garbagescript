@@ -241,9 +241,13 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             }
             return val.filter((v, idx, a) => a.indexOf(v) === idx)
           case Token.Length:
-            return Array.isArray(val)
-              ? val.length
-              : String(val).length
+            if (Array.isArray(val)) {
+              return val.length
+            }
+            if (typeof val !== 'string') {
+              pitchDiagnostic(`Ornament "${op.lexeme}" is intended to be used with strings and arrays, but was applied to something unexpected here (${typeof val})`, node, DiagnosticSeverity.Warning)
+            }
+            return String(val).length
           case Token.Minimum:
           case Token.Maximum:
           case Token.Sum:
@@ -460,7 +464,6 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       }
       case NodeType.ValidateStatement: {
         validateCounter += 1
-        const errors: Array<{ reason: string, start: number, end: number }> = []
         let label = null
         if (node.value[1]) {
           label = resolveAstNode(node.value[1])
