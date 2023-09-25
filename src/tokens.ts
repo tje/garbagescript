@@ -13,6 +13,7 @@ export enum Token {
   GreaterEqual = 'GTE',
   LessEqual = 'LTE',
   Not = 'NOT',
+  Modulo = 'MODULO',
 
   Let = 'LET',
   Assign = 'ASSIGN',
@@ -96,6 +97,7 @@ export const MATCHER = {
   [Token.Divide]: /^\//,
   [Token.Plus]: /^\+/,
   [Token.Minus]: /^-/,
+  [Token.Modulo]: /^([%]|(mod\b))/,
   [Token.Assign]: /^=/, // @todo := to declare too?
   [Token.Ornament]: /^:\b/,
   [Token.CurlyLeft]: /^\{/,

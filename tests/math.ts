@@ -24,6 +24,13 @@ test('multiply', () => {
   assert.is(evaluate('1 * -2'), -2)
 })
 
+test('remainder', () => {
+  assert.is(evaluate('5 % 2'), 1)
+  assert.is(evaluate('6 % 2'), 0)
+  assert.is(evaluate('0 % 2'), 0)
+  assert.is(evaluate('5 mod 2'), 1)
+})
+
 test('greater/less than', () => {
   assert.is(evaluate('2 > 1'), true)
   assert.is(evaluate('2 > 2'), false)

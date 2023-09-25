@@ -355,6 +355,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case Token.Includes: return left?.includes?.(right)
           case Token.Matches: return typeof left === 'string' && typeof right === 'string' && left.toLowerCase().includes(right.toLowerCase())
           case Token.Of: return Array.isArray(right) && right.includes(left)
+          case Token.Modulo: return left % right
         }
         pitchDiagnostic(`Unknown binary operator: "${op.lexeme}"`, node)
         return undefined

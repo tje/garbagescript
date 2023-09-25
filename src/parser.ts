@@ -326,7 +326,7 @@ class Parser {
   private parseFactor (): IASTNode {
     let expr = this.parseUnary()
 
-    while (this.match(Token.Divide, Token.Multiply)) {
+    while (this.match(Token.Divide, Token.Multiply, Token.Modulo)) {
       const op = this.previous()
       const right = this.parseUnary()
       expr = {
