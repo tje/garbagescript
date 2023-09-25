@@ -200,7 +200,7 @@ class Parser {
       type: NodeType.DeclareStatement,
       value: [ name, value ],
       start,
-      end: this.peek().offset,
+      end: value.end,
     }
   }
   private parsePrintStatement (): IASTNode {
@@ -220,7 +220,7 @@ class Parser {
       type: NodeType.ExprStatement,
       value,
       start,
-      end: this.peek().offset,
+      end: value.end,
     }
   }
 
@@ -239,8 +239,8 @@ class Parser {
       return {
         type: NodeType.AssignStatement,
         value: [ expr.value, value, token ],
-        start: token.offset,
-        end: this.peek().offset,
+        start: expr.start,
+        end: value.end,
       }
     }
     return expr
@@ -378,7 +378,7 @@ class Parser {
         type: NodeType.OrnamentExpr,
         value: [ expr, op ],
         start,
-        end: this.peek().offset,
+        end: op.offset + op.lexeme.length,
       }
     }
     return expr
@@ -452,7 +452,7 @@ class Parser {
         type: NodeType.Literal,
         value: t.substring(1, t.length - 1),
         start,
-        end: this.peek().offset,
+        end: start + t.length,
       }
     }
 
