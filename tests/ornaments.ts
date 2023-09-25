@@ -88,6 +88,10 @@ test('string lines', () => {
   assert.equal(evaluate('"hello internet\n\ngood times":lines'), ['hello internet', '', 'good times'])
   assert.equal(evaluate('"\nhello internet\ngood times\n\n":lines'), ['', 'hello internet', 'good times', '', ''])
 })
+test('string characters', () => {
+  assert.equal(evaluate('"hello":characters'), ['h','e','l','l','o'])
+  assert.equal(evaluate('" hello ":characters'), [' ','h','e','l','l','o',' '])
+})
 test('string trim', () => {
   assert.is(evaluate('" hello internet ":trim'), 'hello internet')
   assert.is(evaluate('"     hello internet    ":trim'), 'hello internet')

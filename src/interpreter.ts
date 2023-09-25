@@ -226,12 +226,16 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             return val.trim()
           case Token.Lines:
           case Token.Words:
+          case Token.Characters:
             if (typeof val !== 'string') {
               pitchDiagnostic(`Ornament "${op.lexeme}" must be applied to a string`, node)
               return undefined
             }
             if (op.type === Token.Words) {
               return val.trim().split(/\s+/)
+            }
+            if (op.type === Token.Characters) {
+              return val.split('')
             }
             return val.split('\n')
           case Token.Unique:

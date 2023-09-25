@@ -366,6 +366,7 @@ class Parser {
         Token.UnitDays,
         Token.Words,
         Token.Lines,
+        Token.Characters,
         Token.Uppercase,
         Token.Lowercase,
         Token.Trim,
