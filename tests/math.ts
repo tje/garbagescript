@@ -59,6 +59,49 @@ test('operator precedence', () => {
   assert.is(evaluate('1 + 2 * 3 + 4 > 0'), true)
 })
 
+test('luhn', () => {
+  const script = `
+  let $digits = $sequence:characters:reverse
+  let $sum = 0
+  let $i = 0
+  each $digit of $digits {
+    let $n = $digit * 1
+    if $i % 2 == 1 {
+      $n *= 2
+    }
+    if $n > 9 {
+      $n -= 9
+    }
+    $sum += $n
+    $i += 1
+  }
+  $sum > 0 and $sum % 10 == 0
+  `
+  const samples = [
+    [ '378282246310005',  true ],
+    [ '371449635398431',  true ],
+    [ '378734493671000',  true ],
+    [ '5610591081018250', true ],
+    [ '30569309025904',   true ],
+    [ '38520000023237',   true ],
+    [ '6011111111111117', true ],
+    [ '6011000990139424', true ],
+    [ '3530111333300000', true ],
+    [ '3566002020360505', true ],
+    [ '5555555555554444', true ],
+    [ '5105105105105100', true ],
+    [ '4111111111111111', true ],
+    [ '4012888888881881', true ],
+    [ '4222222222222',    true ],
+    [ 'asdf', false ],
+    [ '000', false ],
+    [ '', false ],
+  ]
+  for (const sample of samples) {
+    assert.is(evaluate(script, { $sequence: sample[0] }), sample[1])
+  }
+})
+
 // @todo
 // test('frac', () => {
 //   assert.is(evaluate('0.5 + 0.5'), 1)
