@@ -130,7 +130,7 @@ export const interpretAst = (...nodes: IASTNode[]) => {
   return interpreter.run(...nodes)
 }
 
-type IInterpreterOptions = {
+export type IInterpreterOptions = {
   subjectData?: { [key: string]: any }
   ignoreErrors?: boolean
   stopAt?: number
