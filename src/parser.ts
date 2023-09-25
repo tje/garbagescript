@@ -395,7 +395,7 @@ class Parser {
         type: NodeType.Variable,
         value,
         start,
-        end: this.peek().offset,
+        end: start + value.length,
       }
     }
     return this.parsePrimary()
