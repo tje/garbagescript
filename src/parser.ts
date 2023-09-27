@@ -67,6 +67,9 @@ class Parser {
     if (this.match(Token.Let)) {
       return this.parseDeclareStatement()
     }
+    if (this.match(Token.Define)) {
+      return this.parseDefineStatement()
+    }
     if (this.match(Token.Print)) {
       return this.parsePrintStatement()
     }
@@ -201,6 +204,18 @@ class Parser {
       value: [ name, value ],
       start,
       end: value.end,
+    }
+  }
+  private parseDefineStatement (): IASTNode {
+    const start = this.previous().offset
+    this.consume(Token.Ornament, 'Expected ornament')
+    const name = this.consume(Token.CustomOrnamentIdentifier, 'Expected identifier')
+    const body = this.parseExpressionStatement()
+    return {
+      type: NodeType.DefineStatement,
+      value: [ name, body ],
+      start,
+      end: body.end,
     }
   }
   private parsePrintStatement (): IASTNode {
@@ -397,6 +412,7 @@ class Parser {
         Token.Round,
         Token.Ceil,
         Token.Floor,
+        Token.CustomOrnamentIdentifier,
       )) {
         throw new ParseError('Invalid ornament', this.peek())
       }
@@ -589,6 +605,7 @@ export enum NodeType {
   ExprStatement,
   PrintStatement,
   DeclareStatement,
+  DefineStatement,
   AssignStatement,
   IfStatement,
   IterStatement,
@@ -665,6 +682,10 @@ type IASTNodeDeclareStatement = {
   type: NodeType.DeclareStatement
   value: [ IToken, IASTNode ]
 }
+type IASTNodeDefineStatement = {
+  type: NodeType.DefineStatement
+  value: [ IToken, IASTNode ]
+}
 type IASTNodeIfStatement = {
   type: NodeType.IfStatement
   value: [ IASTNode, IASTNode, IASTNode | null ]
@@ -703,6 +724,7 @@ export type IASTNode = (
   | IASTNodeStatementList
   | IASTNodeAssignStatement
   | IASTNodeDeclareStatement
+  | IASTNodeDefineStatement
   | IASTNodeIfStatement
   | IASTNodeIterStatement
   | IASTNodeTakeStatement
