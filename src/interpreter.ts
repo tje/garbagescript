@@ -284,6 +284,19 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             if (op.type === Token.Sum) {
               return val.reduce((acc, n) => acc + n, 0)
             }
+          case Token.Round:
+          case Token.Ceil:
+          case Token.Floor:
+            const v = parseFloat(val)
+            if (typeof val !== 'number') {
+              const sev = isNaN(v) ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
+              pitchDiagnostic(`Ornament "${op.lexeme}" is intended to be used with numbers, but was applied to something unexpected here (${typeof val})`, node, sev)
+            }
+            switch (op.type) {
+              case Token.Round: return Math.round(v)
+              case Token.Ceil: return Math.ceil(v)
+              case Token.Floor: return Math.floor(v)
+            }
         }
         pitchDiagnostic(`Unknown ornament: "${op.lexeme}"`, node)
         return val

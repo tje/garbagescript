@@ -67,6 +67,9 @@ export enum Token {
   Uppercase = 'UPPERCASE',
   Lowercase = 'LOWERCASE',
   Reverse = 'REVERSE',
+  Round = 'ROUND',
+  Ceil = 'CEIL',
+  Floor = 'FLOOR',
 
   UnitSeconds = 'UNIT_SECONDS',
   UnitMinutes = 'UNIT_MINUTES',
@@ -157,6 +160,9 @@ export const MATCHER = {
   [Token.Uppercase]: /^upper(case)?\b/,
   [Token.Lowercase]: /^lower(case)?\b/,
   [Token.Reverse]: /^reverse\b/,
+  [Token.Round]: /^round\b/,
+  [Token.Ceil]: /^ceil\b/,
+  [Token.Floor]: /^floor\b/,
 
   [Token.TimeAgo]: /^ago\b/,
   [Token.TimeAhead]: /^(ahead|later|from\snow)\b/,

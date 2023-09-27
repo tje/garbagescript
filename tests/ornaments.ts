@@ -127,4 +127,27 @@ test('length of unique words', () => {
   assert.is(evaluate('"one one one two three":words:unique:length'), 3)
 })
 
+test('round', () => {
+  assert.is(evaluate('5.1:round'), 5)
+  assert.is(evaluate('5.7:round'), 6)
+  assert.is(evaluate('5:round'), 5)
+})
+
+test('ceil', () => {
+  assert.is(evaluate('5.1:ceil'), 6)
+  assert.is(evaluate('5.7:ceil'), 6)
+  assert.is(evaluate('5.0:ceil'), 5)
+  assert.is(evaluate('5.00001:ceil'), 6)
+  assert.is(evaluate('5:ceil'), 5)
+})
+test('floor', () => {
+  assert.is(evaluate('5.1:floor'), 5)
+  assert.is(evaluate('5.7:floor'), 5)
+  assert.is(evaluate('5.0:floor'), 5)
+  assert.is(evaluate('6.0:floor'), 6)
+  assert.is(evaluate('5.00001:floor'), 5)
+  assert.is(evaluate('5.99999:floor'), 5)
+  assert.is(evaluate('5:floor'), 5)
+})
+
 test.run()

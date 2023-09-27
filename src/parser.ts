@@ -372,6 +372,9 @@ class Parser {
         Token.Trim,
         Token.Unique,
         Token.Reverse,
+        Token.Round,
+        Token.Ceil,
+        Token.Floor,
       )) {
         throw new ParseError('Invalid ornament', this.peek())
       }
