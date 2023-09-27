@@ -150,4 +150,10 @@ test('floor', () => {
   assert.is(evaluate('5:floor'), 5)
 })
 
+test('money', () => {
+  assert.is(evaluate('53.133500000000005:money'), 53.13)
+  assert.is(evaluate('"" + 53.133500000000005:money'), '$53.13')
+  assert.is(evaluate('10.00041:money + 10.0001:money'), 20)
+})
+
 test.run()

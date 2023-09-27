@@ -44,6 +44,44 @@ class Duration extends Number {
   }
 }
 
+class Money extends Number {
+  constructor (private _value: number, private _locale = 'en-US', private _currency = 'USD') {
+    super(_value)
+  }
+
+  public get rawValue () {
+    return this._value
+  }
+
+  public get value () {
+    return Math.round(this._value * 100) / 100
+  }
+
+  public toJSON () {
+    return this.toString()
+  }
+
+  public valueOf () {
+    return this.value
+  }
+
+  public toString () {
+    const nf = new Intl.NumberFormat(this._locale, {
+      style: 'currency',
+      currency: this._currency,
+    })
+    return nf.format(this.value)
+  }
+
+  [Symbol.toPrimitive] (hint: string) {
+    console.log({ hint })
+    if (hint === 'string') {
+      return this.toString()
+    }
+    return this.value
+  }
+}
+
 export class RejectMessage extends Error {
   constructor (private _msg: string, private _start: number, private _end: number) {
     super(_msg)
@@ -287,6 +325,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case Token.Round:
           case Token.Ceil:
           case Token.Floor:
+          case Token.Money:
             const v = parseFloat(val)
             if (typeof val !== 'number') {
               const sev = isNaN(v) ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning
@@ -296,6 +335,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
               case Token.Round: return Math.round(v)
               case Token.Ceil: return Math.ceil(v)
               case Token.Floor: return Math.floor(v)
+              case Token.Money: return new Money(v)
             }
         }
         pitchDiagnostic(`Unknown ornament: "${op.lexeme}"`, node)
@@ -315,12 +355,27 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         const op = node.value[1]
         const a = resolveAstNode(node.value[0])
         const b = resolveAstNode(node.value[2])
-        let wrap = (n: any) => n
-        if (a instanceof Date || b instanceof Date) {
-          wrap = (n: any) => new Date(n)
+        const wrap = (n: any) => {
+          if (a instanceof Date || b instanceof Date) {
+            return new Date(n)
+          }
+          if (a instanceof Money || b instanceof Money) {
+            if (typeof a === 'number' || typeof b === 'number') {
+              return new Money(n)
+            }
+          }
+          return n
         }
-        const left = a?.valueOf()
-        const right = b?.valueOf()
+        const unwrap = (n: any) => {
+          if (a instanceof Money || b instanceof Money) {
+            if (typeof a === 'string' || typeof b === 'string') {
+              return n.toString()
+            }
+          }
+          return n?.valueOf() ?? n
+        }
+        const left = unwrap(a)
+        const right = unwrap(b)
 
         // Type mismatch
         switch (op.type) {
@@ -369,8 +424,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
               return left.filter((e) => !other.includes(e))
             }
             return wrap(left - right)
-          case Token.Multiply: return left * right
-          case Token.Divide: return left / right
+          case Token.Multiply: return wrap(left * right)
+          case Token.Divide: return wrap(left / right)
           case Token.Greater: return left > right
           case Token.GreaterEqual: return left >= right
           case Token.Less: return left < right
@@ -380,7 +435,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case Token.Includes: return left?.includes?.(right)
           case Token.Matches: return typeof left === 'string' && typeof right === 'string' && left.toLowerCase().includes(right.toLowerCase())
           case Token.Of: return Array.isArray(right) && right.includes(left)
-          case Token.Modulo: return left % right
+          case Token.Modulo: return wrap(left % right)
         }
         pitchDiagnostic(`Unknown binary operator: "${op.lexeme}"`, node)
         return undefined

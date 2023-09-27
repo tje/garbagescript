@@ -70,6 +70,7 @@ export enum Token {
   Round = 'ROUND',
   Ceil = 'CEIL',
   Floor = 'FLOOR',
+  Money = 'MONEY',
 
   UnitSeconds = 'UNIT_SECONDS',
   UnitMinutes = 'UNIT_MINUTES',
@@ -163,6 +164,7 @@ export const MATCHER = {
   [Token.Round]: /^round\b/,
   [Token.Ceil]: /^ceil\b/,
   [Token.Floor]: /^floor\b/,
+  [Token.Money]: /^money\b/,
 
   [Token.TimeAgo]: /^ago\b/,
   [Token.TimeAhead]: /^(ahead|later|from\snow)\b/,
