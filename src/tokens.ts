@@ -22,6 +22,8 @@ export enum Token {
   MultiplyEquals = 'MULT_EQ',
   DivideEquals = 'DIV_EQ',
   Ornament = 'ORNAMENT',
+  Define = 'DEFINE',
+  CustomOrnamentIdentifier = 'CUSTOM_ORNAMENT',
 
   CurlyLeft = 'CURLY_L',
   CurlyRight = 'CURLY_R',
@@ -114,6 +116,7 @@ export const MATCHER = {
   [Token.Comma]: /^,/,
   [Token.Dot]: /^\./,
   [Token.Let]: /^let\b/,
+  [Token.Define]: /^define\b/,
   [Token.Identifier]: /^\$[a-zA-Z_\d]+/,
   [Token.NumberLiteral]: /^[\d]+[\d_]*(\.[\d_]*)?/,
   [Token.StringLiteral]: /^"(?:[^\\"]|\\(?:[bfnrtv"\\/]|u[0-9a-fA-F]{4}))*"/,
@@ -167,4 +170,5 @@ export const MATCHER = {
   [Token.TimeAgo]: /^ago\b/,
   [Token.TimeAhead]: /^(ahead|later|from\snow)\b/,
   [Token.TimeNow]: /^(now|today)\b/,
+  [Token.CustomOrnamentIdentifier]: /^[a-z_]+\b/,
 }

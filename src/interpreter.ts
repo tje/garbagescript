@@ -298,6 +298,20 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
               case Token.Floor: return Math.floor(v)
             }
         }
+        try {
+          const custom = stack.read(`:${op.lexeme}`)
+          // console.log(custom)
+          if (custom) {
+            stack.push()
+            stack.write('__scope', { $input: val }, { environment: 'enclosure', mode: 'insert' })
+            // console.log({ val, stack: JSON.stringify(stack.dump(), null, 2) })
+            const v = resolveAstNode(custom)
+            stack.pop()
+            return v
+          }
+        } catch (err: any) {
+          pitchDiagnostic(`Error evaluating custom ornament: ${err}`, node)
+        }
         pitchDiagnostic(`Unknown ornament: "${op.lexeme}"`, node)
         return val
       case NodeType.UnaryExpr: {
@@ -421,6 +435,15 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           pitchDiagnostic(err.toString(), node)
         }
         return value
+      }
+      case NodeType.DefineStatement: {
+        const key = node.value[0].lexeme
+        try {
+          stack.write(`:${key}`, node.value[1], { environment: 'local', mode: 'insert' })
+        } catch (err: any) {
+          pitchDiagnostic(err.toString(), node)
+        }
+        return
       }
       case NodeType.AssignStatement: {
         const key = node.value[0]
