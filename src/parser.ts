@@ -350,7 +350,29 @@ class Parser {
         end: this.peek().offset,
       }
     }
-    return this.parseOrnament()
+    return this.parseMeasurement()
+  }
+  private parseMeasurement (): IASTNode {
+    let expr = this.parseOrnament()
+    if (this.match(Token.UnitSeconds, Token.UnitMinutes, Token.UnitHours, Token.UnitDays, Token.UnitWeeks, Token.UnitMonths, Token.UnitYears)) {
+      const unit = this.previous()
+      const measurement: IASTNode = {
+        type: NodeType.Measurement,
+        value: [ expr, unit ],
+        start: expr.start,
+        end: this.peek().offset,
+      }
+      if (this.match(Token.TimeAgo, Token.TimeAhead)) {
+        return {
+          type: NodeType.RelativeDate,
+          value: [ measurement, this.previous() ],
+          start: expr.start,
+          end: this.peek().offset,
+        }
+      }
+      return measurement
+    }
+    return expr
   }
   private parseOrnament (): IASTNode {
     let expr = this.parseIdentifier()
@@ -425,31 +447,12 @@ class Parser {
       }
     }
     if (this.match(Token.NumberLiteral)) {
-      const digit: IASTNode = {
+      return {
         type: NodeType.Literal,
         value: parseFloat(this.previous().lexeme),
         start,
         end: this.peek().offset,
       }
-      if (this.match(Token.UnitSeconds, Token.UnitMinutes, Token.UnitHours, Token.UnitDays, Token.UnitWeeks, Token.UnitMonths, Token.UnitYears)) {
-        const unit = this.previous()
-        const measurement: IASTNode = {
-          type: NodeType.Measurement,
-          value: [ digit, unit ],
-          start,
-          end: this.peek().offset,
-        }
-        if (this.match(Token.TimeAgo, Token.TimeAhead)) {
-          return {
-            type: NodeType.RelativeDate,
-            value: [ measurement, this.previous() ],
-            start,
-            end: this.peek().offset,
-          }
-        }
-        return measurement
-      }
-      return digit
     }
     if (this.match(Token.StringLiteral)) {
       const t = this.previous().lexeme

@@ -132,6 +132,17 @@ test('unit math', () => {
   assert.is(evaluate('1 hour / 2 == 30 minutes'), true)
 })
 
+test('unit math with variables', () => {
+  assert.is(evaluate('let $n = 2\n$n days - 1 day == 1 day'), true)
+  assert.is(evaluate('let $n = 2\n$n days + 1 day == 3 days'), true)
+  assert.is(evaluate('(2 + 3) days == 5 days'), true)
+})
+
+test('date math with variables', () => {
+  assert.is(evaluate('let $n = 2\nnow + $n days == now + 2 days'), true)
+  assert.is(evaluate('let $n = 2\nnow - $n days == now - 2 days'), true)
+})
+
 test('dates', () => {
   assert.is(evaluate('1 day ago < now'), true)
   assert.is(evaluate('1 day ahead > now'), true)
