@@ -6,16 +6,15 @@
   "type": "module",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "require": "./dist/index.js",
       "import": "./dist/index.js"
     }
   },
   "scripts": {
-    "build": "rm dist/* && tsc",
     "sc": "ts-node --",
     "test": "uvu -r tsm tests",
-    "build:bundle": "rollup -c rollup.config.js",
-    "build:types": "rollup -c rollup.types.config.js"
+    "build": "rm dist/* && rollup -c rollup.config.js"
   },
   "keywords": [],
   "author": "",
