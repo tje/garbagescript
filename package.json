@@ -13,13 +13,20 @@
   "scripts": {
     "build": "rm dist/* && tsc",
     "sc": "ts-node --",
-    "test": "uvu -r tsm tests"
+    "test": "uvu -r tsm tests",
+    "build:bundle": "rollup -c rollup.config.js",
+    "build:types": "rollup -c rollup.types.config.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "rollup": "^4.0.2",
+    "rollup-plugin-dts": "^6.1.0",
     "ts-node": "^10.9.1",
+    "tslib": "^2.6.2",
     "tsm": "^2.2.2",
     "typescript": "^4.8.4",
     "uvu": "^0.5.6"
