@@ -331,11 +331,17 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case Token.GreaterEqual:
           case Token.Less:
           case Token.LessEqual:
-            if (!a.is(GasNumber)) {
-              pitchDiagnostic(`Expected a number, got ${a.type} instead`, node.value[0], DiagnosticSeverity.Warning)
-            }
-            if (!b.is(GasNumber)) {
-              pitchDiagnostic(`Expected a number, got ${b.type} instead`, node.value[2], DiagnosticSeverity.Warning)
+            if (a.is(GasDate)) {
+              if (!b.is(GasDuration) && !b.is(GasDate)) {
+                pitchDiagnostic(`Expected a date or duration, got a ${b.type} instead`, node.value[2], DiagnosticSeverity.Warning)
+              }
+            } else {
+              if (!a.is(GasNumber)) {
+                pitchDiagnostic(`Expected a number, got ${a.type} instead`, node.value[0], DiagnosticSeverity.Warning)
+              }
+              if (!b.is(GasNumber)) {
+                pitchDiagnostic(`Expected a number, got ${b.type} instead`, node.value[2], DiagnosticSeverity.Warning)
+              }
             }
           break
           case Token.Includes:
@@ -368,6 +374,10 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             }
             return wrap(left + right)
           case Token.Minus:
+            if (a.is(GasDate) && b.is(GasDate)) {
+              const diff = Math.round((a.inner.getTime() - b.inner.getTime()) / 1_000)
+              return new GasDuration(diff, DurationUnit.Second)
+            }
             if (Array.isArray(left)) {
               const other = [right].flat(1)
               return new GasArray(left.filter((e) => !other.includes(e)).map((e) => GasValue.from(e)))
