@@ -66,4 +66,37 @@ test('money (w/ fixed decimal + thousands)', () => {
   assert.is(ev('0.05'), '$0.05')
 })
 
+test('external ornaments', () => {
+  const ornamentExtensions = {
+    is_numeric: (i: any) => {
+      if (typeof i === 'number') {
+        return true
+      }
+      if (typeof i === 'string') {
+        const n = parseFloat(i)
+        return !isNaN(n) && isFinite(i)
+      }
+      return false
+    },
+    only_alpha: (i: any) => {
+      const fn = (i: any) => {
+        if (typeof i === 'string' || typeof i === 'number') {
+          return String(i).replace(/[^a-zA-Z]/g, '')
+        }
+        return ''
+      }
+      return Array.isArray(i) ? i.map(fn) : fn(i)
+    },
+  }
+  const ev = (script: string) => evaluate(script, undefined, { ornamentExtensions })
+  assert.is(ev('"hello":is_numeric'), false)
+  assert.is(ev('123:is_numeric'), true)
+  assert.is(ev('"123":is_numeric'), true)
+  assert.is(ev('false:is_numeric'), false)
+  assert.is(ev('"abc":only_alpha'), 'abc')
+  assert.is(ev('"123":only_alpha'), '')
+  assert.is(ev('"a1b2c3":only_alpha'), 'abc')
+  assert.equal(ev('["a",1,"b",2]:only_alpha'), ['a', '', 'b', ''])
+})
+
 test.run()

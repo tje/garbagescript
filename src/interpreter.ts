@@ -88,10 +88,12 @@ export const interpretAst = (...nodes: IASTNode[]) => {
   return interpreter.run(...nodes)
 }
 
+type OrnamentFn = (input: any) => any
 export type IInterpreterOptions = {
   subjectData?: { [key: string]: any }
   ignoreErrors?: boolean
   stopAt?: number
+  ornamentExtensions?: Record<string, OrnamentFn>
 }
 
 export const createInterpreter = (options: IInterpreterOptions = {}) => {
@@ -275,6 +277,15 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
               case Token.Ceil: return new GasNumber(Math.ceil(val.inner))
               case Token.Floor: return new GasNumber(Math.floor(val.inner))
             }
+        }
+        if (options.ornamentExtensions?.[op.lexeme]) {
+          try {
+            const fn = options.ornamentExtensions[op.lexeme]
+            return GasValue.from(fn(val.unwrap()))
+          } catch (err: any) {
+            pitchDiagnostic(`Error evaluating custom hoisted ornament: ${err.toString()}`, node)
+            return val
+          }
         }
         try {
           const custom = stack.read(`:${op.lexeme}`)
