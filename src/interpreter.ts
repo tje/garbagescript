@@ -1,7 +1,6 @@
 import { IASTNode, NodeType } from './parser.js'
 import { Token } from './tokens.js'
-import { DurationUnit, GasDuration } from './value/duration.js'
-import { GasArray, GasBoolean, GasDate, GasNumber, GasString, GasStruct, GasUnknown, GasValue } from './value/value.js'
+import { DurationUnit, GasArray, GasBoolean, GasDate, GasDuration, GasNumber, GasString, GasStruct, GasUnknown, GasValue } from './value/value.js'
 
 export class RejectMessage extends Error {
   constructor (private _msg: string, private _start: number, private _end: number) {
@@ -221,7 +220,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             }
             const items = (val.inner as GasValue<any>[])
               .filter((v, idx, a) => a.findIndex((o) => o.inner === v.inner) === idx)
-            return new GasArray(items)
+            return new GasArray(items) as any
           }
           case Token.Length:
             if (val.is(GasArray)) {
