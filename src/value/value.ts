@@ -25,6 +25,9 @@ export abstract class GasValue<T = unknown> {
 
   abstract unwrap (): Unwrapped<T>
 
+  abstract toDisplay (): string
+  abstract toDebug (): string
+
   static from (value: any) {
     if (typeof value === 'number') {
       return new GasNumber(value)
@@ -76,12 +79,24 @@ export class GasUnknown extends GasValue<unknown> {
   public unwrap () {
     return this._value
   }
+  public toDebug () {
+    return `Unknown{${this.toDisplay()}}`
+  }
+  public toDisplay (): string {
+    return String(this._value)
+  }
 }
 
 export class GasString extends GasValue<string> {
   protected _type = 'string'
   public unwrap (): string {
     return this._value
+  }
+  public toDebug () {
+    return `"${this.toDisplay()}"`
+  }
+  public toDisplay (): string {
+    return this.unwrap()
   }
 }
 
@@ -90,12 +105,24 @@ export class GasNumber extends GasValue<number> {
   public unwrap (): number {
     return this._value
   }
+  public toDebug () {
+    return this.toDisplay()
+  }
+  public toDisplay (): string {
+    return this.inner.toString()
+  }
 }
 
 export class GasBoolean extends GasValue<boolean> {
   protected _type = 'boolean'
   public unwrap (): boolean {
     return this._value
+  }
+  public toDebug () {
+    return this.toDisplay()
+  }
+  public toDisplay (): string {
+    return this.inner ? 'true' : 'false'
   }
 }
 
@@ -111,12 +138,13 @@ export class GasArray<T extends GasValue> extends GasValue<T[]> {
   public isItems <I extends GasValueConstructor> (type: I): this is GasArray<InstanceType<I>> {
     return this.inner.some((e) => !(e instanceof type)) === false
   }
-  // public isNumbers (): this is GasArray<GasNumber> {
-  //   return this.inner.some((e) => !(e instanceof GasNumber)) === false
-  // }
-  // public isStrings (): this is GasArray<GasString> {
-  //   return this.inner.some((e) => !(e instanceof GasString)) === false
-  // }
+
+  public toDebug () {
+    return `[ ${this.toDisplay()} ]`
+  }
+  public toDisplay (): string {
+    return this.inner.map((e) => e.toDisplay()).join(', ')
+  }
 }
 
 export class GasStruct<T extends Record<string, GasValue>> extends GasValue<T> {
@@ -130,12 +158,27 @@ export class GasStruct<T extends Record<string, GasValue>> extends GasValue<T> {
         }
       }, {} as Unwrapped<T>)
   }
+  public toDebug () {
+    const inner = Object.entries(this.inner)
+      .map(([ key, val ]) => `${key}: ${val.toDisplay()}`)
+      .join(', ')
+    return `Struct{${inner}}`
+  }
+  public toDisplay (): string {
+    return '{..}'
+  }
 }
 
 export class GasDate extends GasValue<Date> {
   protected _type = 'date'
   public unwrap (): Date {
     return this._value
+  }
+  public toDebug () {
+    return this.inner.toISOString()
+  }
+  public toDisplay (): string {
+    return this.inner.toLocaleString()
   }
 }
 
@@ -150,6 +193,15 @@ export enum DurationUnit {
   Year,
 }
 
+
+const SECOND = 1_000
+const MINUTE = 60 * 1_000
+const HOUR = 60 * 60 * 1_000
+const DAY = 24 * 60 * 60 * 1_000
+const WEEK = 7 * 24 * 60 * 60 * 1_000
+const MONTH = 30 * 24 * 60 * 60 * 1_000
+const YEAR = 365 * 24 * 60 * 60 * 1_000
+
 export class GasDuration extends GasValue<number> {
   protected _type = 'duration'
   constructor (protected _value: number, private unit: DurationUnit) {
@@ -162,13 +214,13 @@ export class GasDuration extends GasValue<number> {
 
   private get _unitValue () {
     switch (this.unit) {
-      case DurationUnit.Second: return 1_000
-      case DurationUnit.Minute: return 60 * 1_000
-      case DurationUnit.Hour: return 60 * 60 * 1_000
-      case DurationUnit.Day: return 24 * 60 * 60 * 1_000
-      case DurationUnit.Week: return 7 * 24 * 60 * 60 * 1_000
-      case DurationUnit.Month: return 30 * 24 * 60 * 60 * 1_000
-      case DurationUnit.Year: return 365 * 24 * 60 * 60 * 1_000
+      case DurationUnit.Second: return SECOND
+      case DurationUnit.Minute: return MINUTE
+      case DurationUnit.Hour: return HOUR
+      case DurationUnit.Day: return DAY
+      case DurationUnit.Week: return WEEK
+      case DurationUnit.Month: return MONTH
+      case DurationUnit.Year: return YEAR
     }
   }
 
@@ -182,5 +234,30 @@ export class GasDuration extends GasValue<number> {
 
   [Symbol.toPrimitive] (_hint: string) {
     return this.unwrap()
+  }
+
+  public toDebug () {
+    return `Duration{${this.inner}}`
+  }
+
+  public toDisplay (): string {
+    const v = this.unwrap()
+    const s = Math.abs(v)
+    if (s >= YEAR) {
+      return `${Math.round((v / YEAR) * 10) / 10} year(s)`
+    }
+    if (s >= MONTH) {
+      return `${Math.round((v / MONTH) * 10) / 10} month(s)`
+    }
+    if (s >= DAY) {
+      return `${Math.round((v / DAY) * 10) / 10} day(s)`
+    }
+    if (s >= HOUR) {
+      return `${Math.round((v / HOUR) * 10) / 10} hour(s)`
+    }
+    if (s >= MINUTE) {
+      return `${Math.round((v / MINUTE) * 10) / 10} minute(s)`
+    }
+    return `${Math.round((v / SECOND) * 10) / 10} second(s)`
   }
 }

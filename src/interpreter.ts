@@ -363,6 +363,9 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             if (Array.isArray(left)) {
               return new GasArray([ ...left.slice(), ...[right].flat(1) ].map((e) => GasValue.from(e)))
             }
+            if (a.is(GasString) || b.is(GasString)) {
+              return new GasString(a.toDisplay() + b.toDisplay())
+            }
             return wrap(left + right)
           case Token.Minus:
             if (Array.isArray(left)) {
@@ -560,7 +563,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       case NodeType.RejectStatement: {
         const value = resolveAstNode(node.value)
         if (value) {
-          const err = new RejectMessage(String(value.unwrap()), node.start, node.value.end)
+          const err = new RejectMessage(value.toDisplay(), node.start, node.value.end)
           rejects.push(err)
           if (validateCounter === 0) {
             throw err
