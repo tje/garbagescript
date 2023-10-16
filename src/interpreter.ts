@@ -604,6 +604,9 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         }
         return new GasUnknown(undefined)
       }
+      case NodeType.InspectExpr: {
+        return resolveAstNode(node.value)
+      }
     }
   }
 

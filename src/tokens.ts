@@ -43,6 +43,7 @@ export enum Token {
   EOF = 'EOF',
 
   Print = 'PRINT',
+  Inspect = 'INSPECT',
   If = 'IF',
   Else = 'ELSE',
   Each = 'EACH',
@@ -123,6 +124,7 @@ export const MATCHER = {
   [Token.BoolLiteral]: /^(true|false)/,
 
   [Token.Print]: /^print\b/,
+  [Token.Inspect]: /^\?/,
   [Token.If]: /^if\b/,
   [Token.Else]: /^else\b/,
   [Token.Each]: /^(each|for)\b/,

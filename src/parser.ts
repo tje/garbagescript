@@ -392,6 +392,15 @@ class Parser {
   }
   private parseOrnament (): IASTNode {
     let expr = this.parseIdentifier()
+    while (this.match(Token.Inspect)) {
+      const op = this.previous()
+      expr = {
+        type: NodeType.InspectExpr,
+        value: expr,
+        start: expr.start,
+        end: op.offset + op.lexeme.length,
+      }
+    }
     while (this.match(Token.Ornament)) {
       const start = this.previous().offset
       if (!this.match(
@@ -422,6 +431,15 @@ class Parser {
         type: NodeType.OrnamentExpr,
         value: [ expr, op ],
         start,
+        end: op.offset + op.lexeme.length,
+      }
+    }
+    while (this.match(Token.Inspect)) {
+      const op = this.previous()
+      expr = {
+        type: NodeType.InspectExpr,
+        value: expr,
+        start: expr.start,
         end: op.offset + op.lexeme.length,
       }
     }
@@ -613,6 +631,7 @@ export enum NodeType {
   TakeStatement,
   RejectStatement,
   ValidateStatement,
+  InspectExpr,
 }
 
 type IASTNodeLiteral = {
@@ -707,6 +726,10 @@ type IASTNodeValidateStatement = {
   type: NodeType.ValidateStatement
   value: [ IASTNode[], IASTNode | null ]
 }
+type IASTNodeInspectExpression = {
+  type: NodeType.InspectExpr
+  value: IASTNode
+}
 export type IASTNode = (
     IASTNodeLiteral
   | IASTNodeMeasurement
@@ -731,6 +754,7 @@ export type IASTNode = (
   | IASTNodeTakeStatement
   | IASTNodeRejectStatement
   | IASTNodeValidateStatement
+  | IASTNodeInspectExpression
 ) & {
   start: number
   end: number
