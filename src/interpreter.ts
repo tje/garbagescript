@@ -131,7 +131,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
     }
   }
 
-  const resolveAstNode = (node: IASTNode): GasValue => {
+  const resolveAstNode = (node: IASTNode, analyzeOnly = false): GasValue => {
     cursor = node.start
     if (options.stopAt !== undefined && options.stopAt <= cursor) {
       throw new StopEarly()
@@ -143,11 +143,11 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
     if (options.analyze) {
       trace.push(tp)
     }
-    tp.value = _resolveAstNodeValue(node)
+    tp.value = _resolveAstNodeValue(node, analyzeOnly)
     return tp.value
   }
 
-  const _resolveAstNodeValue = (node: IASTNode): GasValue => {
+  const _resolveAstNodeValue = (node: IASTNode, analyzeOnly = false): GasValue => {
     switch (node.type) {
       case NodeType.Literal:
         switch (typeof node.value) {
@@ -156,7 +156,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case 'boolean': return new GasBoolean(node.value)
         }
       case NodeType.Measurement:
-        const v = resolveAstNode(node.value[0])
+        const v = resolveAstNode(node.value[0], analyzeOnly)
         if (!v.is(GasNumber)) {
           pitchDiagnostic(`Expected left-hand side to be a number, got ${v.type}`, node.value[0])
           return GasValue.from(v)
@@ -182,7 +182,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         return v
       case NodeType.Date: return new GasDate(new Date())
       case NodeType.RelativeDate: {
-        const dur = resolveAstNode(node.value[0])
+        const dur = resolveAstNode(node.value[0], analyzeOnly)
         if (!dur.is(GasDuration)) {
           pitchDiagnostic(`Expected right-hand side to be a duration, got ${dur.type}`, node.value[0])
           return dur
@@ -315,7 +315,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           if (custom) {
             stack.push()
             stack.write('__scope', new GasStruct({ $input: val }), { environment: 'enclosure', mode: 'insert' })
-            const v = resolveAstNode(custom.unwrap() as any)
+            const v = resolveAstNode(custom.unwrap() as any, analyzeOnly)
             stack.pop()
             return v
           }
@@ -326,7 +326,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         return val
       case NodeType.UnaryExpr: {
         const op = node.value[0]
-        const ex = resolveAstNode(node.value[1])
+        const ex = resolveAstNode(node.value[1], analyzeOnly)
         if (op.type === Token.Not) {
           return new GasBoolean(!ex.inner)
         } else if (op.type === Token.Minus && ex.is(GasNumber)) {
@@ -337,8 +337,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       }
       case NodeType.BinaryExpr: {
         const op = node.value[1]
-        const a = resolveAstNode(node.value[0])
-        const b = resolveAstNode(node.value[2])
+        const a = resolveAstNode(node.value[0], analyzeOnly)
+        const b = resolveAstNode(node.value[2], analyzeOnly)
         let wrap = (n: any) => GasValue.from(n)
         if (a.is(GasDate) || b.is(GasDate)) {
           wrap = (n: any) => new GasDate(new Date(n))
@@ -427,14 +427,18 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       }
       case NodeType.LogicalExpr: {
         const op = node.value[1]
-        const left = resolveAstNode(node.value[0])
+        const left = resolveAstNode(node.value[0], analyzeOnly)
+        let b: GasValue | undefined
+        if (options.analyze) {
+          b = resolveAstNode(node.value[2], true)
+        }
         if (op.type === Token.Or && !!left.unwrap()) {
           return left
         }
         if (op.type === Token.And && !left.unwrap()) {
           return left
         }
-        return resolveAstNode(node.value[2])
+        return b ?? resolveAstNode(node.value[2], analyzeOnly)
       }
       case NodeType.Variable:
         const value = stack.read(node.value)
@@ -445,27 +449,27 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         return value
       case NodeType.BlockExpr: {
         stack.push()
-        const out = resolveAstNode(node.value as IASTNode)
+        const out = resolveAstNode(node.value as IASTNode, analyzeOnly)
         stack.pop()
         return out
       }
-      case NodeType.Grouping: return resolveAstNode(node.value)
+      case NodeType.Grouping: return resolveAstNode(node.value, analyzeOnly)
       case NodeType.PrintStatement: {
-        const v = resolveAstNode(node.value)
+        const v = resolveAstNode(node.value, analyzeOnly)
         console.log(v.unwrap())
         return v
       }
-      case NodeType.ExprStatement: return resolveAstNode(node.value)
+      case NodeType.ExprStatement: return resolveAstNode(node.value, analyzeOnly)
       case NodeType.StatementList: {
         let v: GasValue = new GasUnknown(undefined)
         node.value.forEach((n) => {
-          v = resolveAstNode(n)
+          v = resolveAstNode(n, analyzeOnly)
         })
         return v
       }
       case NodeType.DeclareStatement: {
         const key = node.value[0].lexeme
-        const value = resolveAstNode(node.value[1])
+        const value = resolveAstNode(node.value[1], analyzeOnly)
         try {
           stack.write(key, value)
         } catch (err: any) {
@@ -484,7 +488,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       }
       case NodeType.AssignStatement: {
         const key = node.value[0]
-        let value = resolveAstNode(node.value[1])
+        let value = resolveAstNode(node.value[1], analyzeOnly)
         const { type } = node.value[2]
         const prev = stack.read(key)
         if (prev === undefined) {
@@ -535,23 +539,31 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           pitchDiagnostic(`Variable type changed from ${prev.type} to ${value.type}`, node, DiagnosticSeverity.Warning)
         }
         try {
-          stack.write(key, value, { mode: 'update' })
+          if (!analyzeOnly) {
+            stack.write(key, value, { mode: 'update' })
+          }
         } catch (err: any) {
           pitchDiagnostic(err.toString(), node)
         }
         return value
       }
       case NodeType.IfStatement: {
-        const cond = resolveAstNode(node.value[0])
+        const cond = resolveAstNode(node.value[0], analyzeOnly)
         if (!!cond.inner) {
-          return resolveAstNode(node.value[1])
+          if (options.analyze && node.value[2]) {
+            resolveAstNode(node.value[2], true)
+          }
+          return resolveAstNode(node.value[1], analyzeOnly)
         } else if (node.value[2]) {
-          return resolveAstNode(node.value[2])
+          return resolveAstNode(node.value[2], analyzeOnly)
+        }
+        if (options.analyze) {
+          resolveAstNode(node.value[1], true)
         }
         return new GasUnknown(undefined)
       }
       case NodeType.IterStatement: {
-        const items = resolveAstNode(node.value[0])
+        const items = resolveAstNode(node.value[0], analyzeOnly)
         const out = []
         if (!items.is(GasArray)) {
           pitchDiagnostic('Not iterable', node.value[0])
@@ -563,25 +575,25 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           if (node.value[2]) {
             stack.write(node.value[2].lexeme, item)
           }
-          out.push(resolveAstNode(node.value[1]))
+          out.push(resolveAstNode(node.value[1], analyzeOnly))
           stack.pop()
         }
         return new GasArray(out)
       }
-      case NodeType.Collection: return new GasArray(node.value.map((n) => resolveAstNode(n)))
+      case NodeType.Collection: return new GasArray(node.value.map((n) => resolveAstNode(n, analyzeOnly)))
       case NodeType.TakeStatement: {
-        node.value.map((n) => resolveAstNode(n))
+        node.value.map((n) => resolveAstNode(n, analyzeOnly))
         return new GasUnknown(undefined)
       }
       case NodeType.ValidateStatement: {
         validateCounter += 1
         let label = undefined
         if (node.value[1]) {
-          label = String(resolveAstNode(node.value[1]).inner)
+          label = String(resolveAstNode(node.value[1], analyzeOnly).inner)
         }
         for (const statement of node.value[0]) {
           try {
-            resolveAstNode(statement)
+            resolveAstNode(statement, analyzeOnly)
           } catch (err) {
             if (!options.ignoreErrors) {
               throw err
@@ -594,8 +606,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         return new GasUnknown(vr)
       }
       case NodeType.RejectStatement: {
-        const value = resolveAstNode(node.value)
-        if (value) {
+        const value = resolveAstNode(node.value, analyzeOnly)
+        if (value && !analyzeOnly) {
           const err = new RejectMessage(value.toDisplay(), node.start, node.value.end)
           rejects.push(err)
           if (validateCounter === 0) {
@@ -605,7 +617,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         return new GasUnknown(undefined)
       }
       case NodeType.InspectExpr: {
-        return resolveAstNode(node.value)
+        return resolveAstNode(node.value, analyzeOnly)
       }
     }
   }
