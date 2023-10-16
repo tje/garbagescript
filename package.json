@@ -18,7 +18,8 @@
   "scripts": {
     "sc": "ts-node --",
     "test": "uvu -r tsm tests",
-    "build": "rm dist/* && rollup -c rollup.config.js"
+    "build": "rm dist/* && rollup -c rollup.config.js",
+    "prepack": "npm run build"
   },
   "keywords": [],
   "author": "",
