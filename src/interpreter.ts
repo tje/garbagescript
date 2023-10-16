@@ -350,26 +350,32 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         switch (op.type) {
           case Token.Multiply:
           case Token.Divide:
+            if (a.is(GasDuration)) {
+              if (!b.is(GasNumber)) {
+                pitchDiagnostic(`Expected a number, got a ${b.type} instead`, node.value[2], DiagnosticSeverity.Warning)
+              }
+            } else {
+              if (!a.is(GasNumber)) {
+                pitchDiagnostic(`Expected a number, got a ${a.type} instead`, node.value[0], DiagnosticSeverity.Warning)
+              }
+              if (!b.is(GasNumber)) {
+                pitchDiagnostic(`Expected a number, got a ${b.type} instead`, node.value[2], DiagnosticSeverity.Warning)
+              }
+            }
+          break
           case Token.Greater:
           case Token.GreaterEqual:
           case Token.Less:
           case Token.LessEqual:
-            if (a.is(GasDate)) {
-              if (!b.is(GasDuration) && !b.is(GasDate)) {
-                pitchDiagnostic(`Expected a date or duration, got a ${b.type} instead`, node.value[2], DiagnosticSeverity.Warning)
-              }
-            } else {
-              if (!a.is(GasNumber)) {
-                pitchDiagnostic(`Expected a number, got ${a.type} instead`, node.value[0], DiagnosticSeverity.Warning)
-              }
-              if (!b.is(GasNumber)) {
-                pitchDiagnostic(`Expected a number, got ${b.type} instead`, node.value[2], DiagnosticSeverity.Warning)
-              }
+          case Token.Equals:
+          case Token.NotEquals:
+            if (a.type !== b.type) {
+              pitchDiagnostic(`Expected matching types, got a ${a.type} and ${b.type} instead`, node, DiagnosticSeverity.Warning)
             }
           break
           case Token.Includes:
-            if (!a.is(GasArray)) {
-              pitchDiagnostic(`Expected an array, got ${a.type} instead`, node.value[0], DiagnosticSeverity.Warning)
+            if (!a.is(GasArray) && !a.is(GasString)) {
+              pitchDiagnostic(`Expected an array or string, got a ${a.type} instead`, node.value[0], DiagnosticSeverity.Warning)
             }
           break
           case Token.Matches:
@@ -381,8 +387,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             }
           break
           case Token.Of:
-            if (!b.is(GasArray)) {
-              pitchDiagnostic(`Expected an array, got ${b.type} instead`, node.value[2], DiagnosticSeverity.Warning)
+            if (!b.is(GasArray) && !b.is(GasString)) {
+              pitchDiagnostic(`Expected an array or string, got a ${b.type} instead`, node.value[2], DiagnosticSeverity.Warning)
             }
           break
         }
