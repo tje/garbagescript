@@ -391,16 +391,7 @@ class Parser {
     return expr
   }
   private parseOrnament (): IASTNode {
-    let expr = this.parseIdentifier()
-    while (this.match(Token.Inspect)) {
-      const op = this.previous()
-      expr = {
-        type: NodeType.InspectExpr,
-        value: expr,
-        start: expr.start,
-        end: op.offset + op.lexeme.length,
-      }
-    }
+    let expr = this.parseInspect()
     while (this.match(Token.Ornament)) {
       const start = this.previous().offset
       if (!this.match(
@@ -434,6 +425,19 @@ class Parser {
         end: op.offset + op.lexeme.length,
       }
     }
+    while (this.match(Token.Inspect)) {
+      const op = this.previous()
+      expr = {
+        type: NodeType.InspectExpr,
+        value: expr,
+        start: expr.start,
+        end: op.offset + op.lexeme.length,
+      }
+    }
+    return expr
+  }
+  private parseInspect (): IASTNode {
+    let expr = this.parseIdentifier()
     while (this.match(Token.Inspect)) {
       const op = this.previous()
       expr = {
