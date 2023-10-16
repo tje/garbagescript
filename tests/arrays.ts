@@ -227,4 +227,8 @@ test('pull multiple', () => {
   assert.equal(evaluate('let $things = [ "a", "b", "c" ]\n$things -= [ "b", "c" ]\n$things'), ['a'])
 })
 
+test('no infinite loops', () => {
+  assert.equal(evaluate('let $things = [ "a" ]\neach $things {\n$things += "b"\n}\n$things'), [ 'a', 'b' ])
+})
+
 test.run()

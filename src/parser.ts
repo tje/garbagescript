@@ -269,7 +269,7 @@ class Parser {
         type: NodeType.LogicalExpr,
         value: [ expr, op, right ],
         start: op.offset,
-        end: this.peek().offset,
+        end: right.end,
       }
     }
     return expr
@@ -284,7 +284,7 @@ class Parser {
         type: NodeType.LogicalExpr,
         value: [ expr, op, right ],
         start: op.offset,
-        end: this.peek().offset,
+        end: right.end,
       }
     }
 
@@ -300,7 +300,7 @@ class Parser {
         type: NodeType.BinaryExpr,
         value: [ expr, op, right ],
         start: op.offset,
-        end: this.peek().offset,
+        end: right.end,
       }
     }
 
@@ -316,7 +316,7 @@ class Parser {
         type: NodeType.BinaryExpr,
         value: [ expr, op, right ],
         start: op.offset,
-        end: this.peek().offset,
+        end: right.end,
       }
     }
 
@@ -332,7 +332,7 @@ class Parser {
         type: NodeType.BinaryExpr,
         value: [ expr, op, right ],
         start: op.offset,
-        end: this.peek().offset,
+        end: right.end,
       }
     }
 
@@ -348,7 +348,7 @@ class Parser {
         type: NodeType.BinaryExpr,
         value: [ expr, op, right ],
         start: op.offset, // or expr?
-        end: this.peek().offset,
+        end: right.end,
       }
     }
 
@@ -362,7 +362,7 @@ class Parser {
         type: NodeType.UnaryExpr,
         value: [ op, right ],
         start: op.offset,
-        end: this.peek().offset,
+        end: right.end,
       }
     }
     return this.parseMeasurement()
@@ -375,14 +375,15 @@ class Parser {
         type: NodeType.Measurement,
         value: [ expr, unit ],
         start: expr.start,
-        end: this.peek().offset,
+        end: unit.offset + unit.lexeme.length,
       }
       if (this.match(Token.TimeAgo, Token.TimeAhead)) {
+        const op = this.previous()
         return {
           type: NodeType.RelativeDate,
-          value: [ measurement, this.previous() ],
+          value: [ measurement, op ],
           start: expr.start,
-          end: this.peek().offset,
+          end: op.offset + op.lexeme.length,
         }
       }
       return measurement
@@ -451,7 +452,7 @@ class Parser {
         type: NodeType.Literal,
         value: this.previous().lexeme === 'true',
         start,
-        end: this.peek().offset,
+        end: start + this.previous().lexeme.length,
       }
     }
     if (this.match(Token.TimeNow)) {
@@ -459,7 +460,7 @@ class Parser {
         type: NodeType.Date,
         value: new Date(),
         start,
-        end: this.peek().offset,
+        end: start + this.previous().lexeme.length,
       }
     }
     if (this.match(Token.NumberLiteral)) {
@@ -467,7 +468,7 @@ class Parser {
         type: NodeType.Literal,
         value: parseFloat(this.previous().lexeme),
         start,
-        end: this.peek().offset,
+        end: start + this.previous().lexeme.length,
       }
     }
     if (this.match(Token.StringLiteral)) {
@@ -509,7 +510,7 @@ class Parser {
         type: NodeType.Collection,
         value: items,
         start,
-        end: this.previous().offset,
+        end: this.previous().offset + this.previous().lexeme.length,
       }
     }
 
