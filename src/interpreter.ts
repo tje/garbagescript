@@ -32,8 +32,13 @@ export class ValidationResults {
   }
 }
 
+export interface TraceEntry {
+  node: IASTNode
+  value: GasValue
+}
+
 export class EvaluationResults {
-  constructor (private _output: any, private _validationResults: ValidationResults[], private _diagnostics: InterpreterDiagnostic[]) {}
+  constructor (private _output: any, private _validationResults: ValidationResults[], private _diagnostics: InterpreterDiagnostic[], private _trace: TraceEntry[]) {}
 
   public get output () {
     return this._output
@@ -51,6 +56,10 @@ export class EvaluationResults {
 
   public get diagnostics () {
     return this._diagnostics.slice()
+  }
+
+  public get trace () {
+    return this._trace.slice()
   }
 }
 
@@ -92,6 +101,7 @@ type OrnamentFn = (input: any) => any
 export type IInterpreterOptions = {
   subjectData?: { [key: string]: any }
   ignoreErrors?: boolean
+  analyze?: boolean
   stopAt?: number
   ornamentExtensions?: Record<string, OrnamentFn>
 }
@@ -103,6 +113,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
   const rejects: RejectMessage[] = []
   const validationResults: ValidationResults[] = []
   const diagnostics: InterpreterDiagnostic[] = []
+  const trace: Array<{ node: IASTNode, value: any }> = []
 
   const stack = createStack()
   if (options.subjectData) {
@@ -125,6 +136,18 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
     if (options.stopAt !== undefined && options.stopAt <= cursor) {
       throw new StopEarly()
     }
+    const tp = {
+      node,
+      value: new GasUnknown(undefined),
+    }
+    if (options.analyze) {
+      trace.push(tp)
+    }
+    tp.value = _resolveAstNodeValue(node)
+    return tp.value
+  }
+
+  const _resolveAstNodeValue = (node: IASTNode): GasValue => {
     switch (node.type) {
       case NodeType.Literal:
         switch (typeof node.value) {
@@ -602,6 +625,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       output.unwrap(),
       validationResults.splice(0, validationResults.length),
       diagnostics,
+      trace,
     )
   }
 

@@ -6,7 +6,7 @@ type SubjectData = { [key: string]: any }
 
 const _evaluate = (script: string, subjectData?: SubjectData, options?: Omit<IInterpreterOptions, 'subjectData'>) => {
   const [ tokens, errs ] = scanSource(script)
-  if (errs.length > 0) {
+  if (errs.length > 0 && !options?.ignoreErrors) {
     throw new Error(`Errors (${errs.length}) occurred parsing source: ${errs[0].msg}`)
   }
   const tree = generateAST(tokens)
@@ -28,4 +28,4 @@ export const validate = (script: string, subjectData?: SubjectData, options?: Om
 export { scanSource } from './scanner.js'
 export { Token } from './tokens.js'
 export { generateAST, ParseError } from './parser.js'
-export { createInterpreter, InterpreterDiagnostic } from './interpreter.js'
+export { createInterpreter, InterpreterDiagnostic, TraceEntry } from './interpreter.js'
