@@ -140,7 +140,7 @@ export class GasArray<T extends GasValue> extends GasValue<T[]> {
   }
 
   public toDebug () {
-    return `[ ${this.toDisplay()} ]`
+    return `[ ${this.inner.map((e) => e.toDebug()).join(', ')} ]`
   }
   public toDisplay (): string {
     return this.inner.map((e) => e.toDisplay()).join(', ')
@@ -160,9 +160,9 @@ export class GasStruct<T extends Record<string, GasValue>> extends GasValue<T> {
   }
   public toDebug () {
     const inner = Object.entries(this.inner)
-      .map(([ key, val ]) => `${key}: ${val.toDisplay()}`)
-      .join(', ')
-    return `Struct{${inner}}`
+      .map(([ key, val ]) => `  ${key}: ${val.toDebug().split('\n').map((l, i) => i !== 0 ? '  ' + l : l).join('\n')}`)
+      .join('\n')
+    return `Struct{\n${inner}\n}`
   }
   public toDisplay (): string {
     return '{..}'
