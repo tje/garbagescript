@@ -131,7 +131,7 @@ export const MATCHER = {
   [Token.This]: /^(this|it)\b/,
   [Token.If]: /^if\b/,
   [Token.Else]: /^else\b/,
-  [Token.Each]: /^(each|for)\b/,
+  [Token.Each]: /^(each|for|for\s*each)\b/,
   [Token.Of]: /^(of|in)\b/,
   [Token.Includes]: /^includes\b/,
   [Token.Matches]: /^matches\b/,
