@@ -118,7 +118,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
   const stack = createStack()
   if (options.subjectData) {
     for (const [ key, val ] of Object.entries(options.subjectData)) {
-      stack.write(key, GasValue.from(val), { mutable: false })
+      stack.write(key, GasValue.from(val, [ key ]), { mutable: false })
     }
   }
 

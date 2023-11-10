@@ -14,13 +14,18 @@ type GasValueConstructor =
   | typeof GasStruct
   | typeof GasUnknown
 
+type GasValuePath = (string | number)[]
 export abstract class GasValue<T = unknown> {
   protected _type: string = 'unknown'
 
-  constructor (protected _value: T) {}
+  constructor (protected _value: T, protected _path: GasValuePath = []) {}
 
   public get type () {
     return this._type
+  }
+
+  public get path () {
+    return this._path
   }
 
   abstract unwrap (): Unwrapped<T>
@@ -28,31 +33,31 @@ export abstract class GasValue<T = unknown> {
   abstract toDisplay (): string
   abstract toDebug (): string
 
-  static from (value: any) {
+  static from (value: any, path: GasValuePath = []) {
     if (typeof value === 'number') {
-      return new GasNumber(value)
+      return new GasNumber(value, path)
     }
     if (typeof value === 'string') {
-      return new GasString(value)
+      return new GasString(value, path)
     }
     if (typeof value === 'boolean') {
-      return new GasBoolean(value)
+      return new GasBoolean(value, path)
     }
     if (value instanceof Date) {
-      return new GasDate(value)
+      return new GasDate(value, path)
     }
     if (Array.isArray(value)) {
-      const items = value.map((e) => this.from(e)) as GasValue<unknown>[]
-      return new GasArray(items)
+      const items = value.map((e, idx) => this.from(e, [ ...path, idx ])) as GasValue<unknown>[]
+      return new GasArray(items, path)
     }
     if (value?.constructor === Object) {
       const rec: Record<string, GasValue> = {}
       for (const [ key, val ] of Object.entries(value)) {
-        rec[key] = this.from(val)
+        rec[key] = this.from(val, [ ...path, key ])
       }
-      return new GasStruct(rec)
+      return new GasStruct(rec, path)
     }
-    return new GasUnknown(value)
+    return new GasUnknown(value, path)
   }
 
   static isGasValue (v: any): v is GasValue {
@@ -204,8 +209,8 @@ const YEAR = 365 * 24 * 60 * 60 * 1_000
 
 export class GasDuration extends GasValue<number> {
   protected _type = 'duration'
-  constructor (protected _value: number, private unit: DurationUnit) {
-    super(_value)
+  constructor (protected _value: number, private unit: DurationUnit, protected _path: GasValuePath = []) {
+    super(_value, _path)
   }
 
   public unwrap (): number {
