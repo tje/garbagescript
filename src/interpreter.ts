@@ -631,19 +631,17 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       case NodeType.MetaKeyword: {
         if (node.value.type === Token.Index) {
           const value = stack.read('__index')
-          if (value === undefined) {
-            pitchDiagnostic('Index undefined', node)
-            return new GasUnknown(value)
+          if (value !== undefined) {
+            return value
           }
-          return value
+          pitchDiagnostic('Index undefined', node)
         }
         if (node.value.type === Token.This) {
           const value = stack.read('__scope')
-          if (value === undefined) {
-            pitchDiagnostic('Reference to scope in invalid context', node)
-            return new GasUnknown(undefined)
+          if (value !== undefined) {
+            return value
           }
-          return value
+          pitchDiagnostic('Reference to scope in invalid context', node)
         }
         return new GasUnknown(undefined)
       }
