@@ -235,4 +235,8 @@ test('index', () => {
   assert.equal(evaluate('let $things = [ 1, 1, 1 ]\nlet $n = []\neach $things {\n$n += index\n}\n$n'), [ 0, 1, 2 ])
 })
 
+test('index outside of array throws', () => {
+  assert.throws(() => evaluate('index'), 'undefined')
+})
+
 test.run()
