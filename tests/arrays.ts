@@ -239,4 +239,10 @@ test('index outside of array throws', () => {
   assert.throws(() => evaluate('index'), 'undefined')
 })
 
+test('this/it', () => {
+  const $things = [ 1, 2, 3 ]
+  assert.equal(evaluate('let $n = []\neach $things {\n$n += it * 10\n}\n$n', { $things }), [ 10, 20, 30 ])
+  assert.equal(evaluate('let $n = []\neach $things {\n$n += this * 10\n}\n$n', { $things }), [ 10, 20, 30 ])
+})
+
 test.run()

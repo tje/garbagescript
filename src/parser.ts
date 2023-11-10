@@ -469,7 +469,7 @@ class Parser {
   private parsePrimary (): IASTNode {
     const start = this.peek().offset
 
-    if (this.match(Token.Index)) {
+    if (this.match(Token.Index, Token.This)) {
       return {
         type: NodeType.MetaKeyword,
         value: this.previous(),

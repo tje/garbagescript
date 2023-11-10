@@ -637,6 +637,14 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           }
           return value
         }
+        if (node.value.type === Token.This) {
+          const value = stack.read('__scope')
+          if (value === undefined) {
+            pitchDiagnostic('Reference to scope in invalid context', node)
+            return new GasUnknown(undefined)
+          }
+          return value
+        }
         return new GasUnknown(undefined)
       }
     }
