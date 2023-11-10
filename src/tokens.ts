@@ -174,7 +174,7 @@ export const MATCHER = {
   [Token.Floor]: /^floor\b/,
 
   [Token.TimeAgo]: /^ago\b/,
-  [Token.TimeAhead]: /^(ahead|later|from\snow)\b/,
+  [Token.TimeAhead]: /^(ahead|later|from\s+now)\b/,
   [Token.TimeNow]: /^(now|today)\b/,
   [Token.CustomOrnamentIdentifier]: /^[a-z_]+\b/,
 }
