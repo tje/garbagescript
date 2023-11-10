@@ -154,10 +154,15 @@ class Parser {
   }
   private parseRejectStatement (): IASTNode {
     const start = this.previous().offset
-    const expr = this.parseExpression()
+    let reason = this.parseExpression()
+    let because = null
+    if (this.match(Token.Because)) {
+      because = reason
+      reason = this.parseExpression()
+    }
     return {
       type: NodeType.RejectStatement,
-      value: expr,
+      value: [ reason, because ],
       start,
       end: this.peek().offset,
     }
@@ -733,7 +738,7 @@ type IASTNodeTakeStatement = {
 }
 type IASTNodeRejectStatement = {
   type: NodeType.RejectStatement
-  value: IASTNode
+  value: [IASTNode, IASTNode | null]
 }
 type IASTNodeValidateStatement = {
   type: NodeType.ValidateStatement

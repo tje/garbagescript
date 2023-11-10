@@ -3,12 +3,16 @@ import { Token } from './tokens.js'
 import { DurationUnit, GasArray, GasBoolean, GasDate, GasDuration, GasNumber, GasString, GasStruct, GasUnknown, GasValue } from './value/value.js'
 
 export class RejectMessage extends Error {
-  constructor (private _msg: string, private _start: number, private _end: number) {
+  constructor (private _msg: string, private _start: number, private _end: number, private _subject?: GasValue) {
     super(_msg)
   }
 
   public get reason () {
     return this._msg
+  }
+
+  public get subject () {
+    return this._subject
   }
 
   public get range () {
@@ -615,9 +619,12 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         return new GasUnknown(vr)
       }
       case NodeType.RejectStatement: {
-        const value = resolveAstNode(node.value, analyzeOnly)
+        const value = resolveAstNode(node.value[0], analyzeOnly)
         if (value && !analyzeOnly) {
-          const err = new RejectMessage(value.toDisplay(), node.start, node.value.end)
+          const subject = node.value[1]
+            ? resolveAstNode(node.value[1], analyzeOnly)
+            : undefined
+          const err = new RejectMessage(value.toDisplay(), node.start, node.value[0].end, subject)
           rejects.push(err)
           if (validateCounter === 0) {
             throw err

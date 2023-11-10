@@ -58,6 +58,7 @@ export enum Token {
   And = 'AND',
   Reject = 'REJECT',
   Validate = 'VALIDATE',
+  Because = 'BECAUSE',
   Today = 'TODAY',
 
   Length = 'LENGTH',
@@ -141,6 +142,7 @@ export const MATCHER = {
   [Token.And]: /^and\b/,
   [Token.Reject]: /^reject\b/,
   [Token.Validate]: /^validate\b/,
+  [Token.Because]: /^because\b/,
 
   [Token.UnitSeconds]: /^seconds?\b/,
   [Token.UnitMinutes]: /^minutes?\b/,
