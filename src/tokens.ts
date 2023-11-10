@@ -44,6 +44,7 @@ export enum Token {
 
   Print = 'PRINT',
   Inspect = 'INSPECT',
+  Index = 'INDEX',
   If = 'IF',
   Else = 'ELSE',
   Each = 'EACH',
@@ -125,6 +126,7 @@ export const MATCHER = {
 
   [Token.Print]: /^print\b/,
   [Token.Inspect]: /^\?/,
+  [Token.Index]: /^index\b/,
   [Token.If]: /^if\b/,
   [Token.Else]: /^else\b/,
   [Token.Each]: /^(each|for)\b/,

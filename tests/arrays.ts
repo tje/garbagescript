@@ -231,4 +231,8 @@ test('no infinite loops', () => {
   assert.equal(evaluate('let $things = [ "a" ]\neach $things {\n$things += "b"\n}\n$things'), [ 'a', 'b' ])
 })
 
+test('index', () => {
+  assert.equal(evaluate('let $things = [ 1, 1, 1 ]\nlet $n = []\neach $things {\n$n += index\n}\n$n'), [ 0, 1, 2 ])
+})
+
 test.run()

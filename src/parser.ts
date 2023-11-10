@@ -469,6 +469,14 @@ class Parser {
   private parsePrimary (): IASTNode {
     const start = this.peek().offset
 
+    if (this.match(Token.Index)) {
+      return {
+        type: NodeType.MetaKeyword,
+        value: this.previous(),
+        start,
+        end: start + this.previous().lexeme.length,
+      }
+    }
     if (this.match(Token.BoolLiteral)) {
       return {
         type: NodeType.Literal,
@@ -636,6 +644,7 @@ export enum NodeType {
   RejectStatement,
   ValidateStatement,
   InspectExpr,
+  MetaKeyword,
 }
 
 type IASTNodeLiteral = {
@@ -734,6 +743,10 @@ type IASTNodeInspectExpression = {
   type: NodeType.InspectExpr
   value: IASTNode
 }
+type IASTNodeMetaKeyword = {
+  type: NodeType.MetaKeyword
+  value: IToken
+}
 export type IASTNode = (
     IASTNodeLiteral
   | IASTNodeMeasurement
@@ -759,6 +772,7 @@ export type IASTNode = (
   | IASTNodeRejectStatement
   | IASTNodeValidateStatement
   | IASTNodeInspectExpression
+  | IASTNodeMetaKeyword
 ) & {
   start: number
   end: number

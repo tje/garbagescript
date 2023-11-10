@@ -575,14 +575,17 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           pitchDiagnostic('Not iterable', node.value[0])
           return items
         }
+        let idx = 0
         for (const item of items.inner) {
           stack.push()
           stack.write('__scope', item)
+          stack.write('__index', new GasNumber(idx))
           if (node.value[2]) {
             stack.write(node.value[2].lexeme, item)
           }
           out.push(resolveAstNode(node.value[1], analyzeOnly))
           stack.pop()
+          idx += 1
         }
         return new GasArray(out)
       }
@@ -624,6 +627,17 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       }
       case NodeType.InspectExpr: {
         return resolveAstNode(node.value, analyzeOnly)
+      }
+      case NodeType.MetaKeyword: {
+        if (node.value.type === Token.Index) {
+          const value = stack.read('__index')
+          if (value === undefined) {
+            pitchDiagnostic('Index undefined', node)
+            return new GasUnknown(value)
+          }
+          return value
+        }
+        return new GasUnknown(undefined)
       }
     }
   }
