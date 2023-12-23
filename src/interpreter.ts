@@ -604,6 +604,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         if (node.value[1]) {
           label = String(resolveAstNode(node.value[1], analyzeOnly).inner)
         }
+        stack.push()
         for (const statement of node.value[0]) {
           try {
             resolveAstNode(statement, analyzeOnly)
@@ -616,6 +617,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         validateCounter -= 1
         const vr = new ValidationResults(rejects.splice(0, rejects.length), label)
         validationResults.push(vr)
+        stack.pop()
         return new GasUnknown(vr)
       }
       case NodeType.RejectStatement: {
