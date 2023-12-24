@@ -44,7 +44,7 @@ class Parser {
       type: NodeType.StatementList,
       value: statements,
       start: 0,
-      end: this.previous().offset,
+      end: this.peek().offset,
     }
   }
 
