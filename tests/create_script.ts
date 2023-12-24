@@ -26,4 +26,16 @@ test('create and update script', () => {
   assert.is(gs.evaluate(), 4)
 })
 
+test('empty script does nothing', () => {
+  const gs = createScript('')
+  assert.is(gs.script, '')
+  assert.is(gs.evaluate(), undefined)
+})
+
+test('comment + EOF instead of EOL is ok', () => {
+  const gs = createScript('// Comment')
+  assert.is(gs.script, '// Comment')
+  assert.is(gs.evaluate(), undefined)
+})
+
 test.run()
