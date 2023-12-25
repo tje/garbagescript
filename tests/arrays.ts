@@ -245,4 +245,19 @@ test('this/it', () => {
   assert.equal(evaluate('let $n = []\neach $things {\n$n += this * 10\n}\n$n', { $things }), [ 10, 20, 30 ])
 })
 
+test('each ... as', () => {
+  const script = `
+    let $t = 0
+    each $items as $item {
+      $t += $item
+    }
+    $t
+  `
+  const data = {
+    $items: [ 1, 2, 3 ],
+  }
+  assert.not.throws(() => evaluate(script, data))
+  assert.equal(evaluate(script, data), 6)
+})
+
 test.run()
