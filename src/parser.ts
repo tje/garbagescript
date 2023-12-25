@@ -81,10 +81,14 @@ class Parser {
     if (this.match(Token.CurlyLeft)) {
       while (!this.match(Token.CurlyRight)) {
         const token = this.consume(Token.Identifier, 'Expected identifier')
+        let assignTo = token
+        if (this.match(Token.As)) {
+          assignTo = this.consume(Token.Identifier, 'Expected identifier')
+        }
         values.push({
           type: NodeType.DeclareStatement,
           value: [
-            token,
+            assignTo,
             {
               type: NodeType.Variable,
               value: '__scope.' + token.lexeme,
@@ -99,10 +103,14 @@ class Parser {
       }
     } else {
       const token = this.consume(Token.Identifier, 'Expected identifier')
+      let assignTo = token
+      if (this.match(Token.As)) {
+        assignTo = this.consume(Token.Identifier, 'Expected identifier')
+      }
       values.push({
         type: NodeType.DeclareStatement,
         value: [
-          token,
+          assignTo,
           {
             type: NodeType.Variable,
             value: '__scope.' + token.lexeme,
@@ -175,6 +183,9 @@ class Parser {
       this.consume(Token.Of, 'Expected "of"')
     }
     const target = this.parseExpression()
+    if (this.match(Token.As)) {
+      scope = this.consume(Token.Identifier, 'Expected identifier')
+    }
     const expr = this.parseStatement()
     return {
       type: NodeType.IterStatement,
