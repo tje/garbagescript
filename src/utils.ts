@@ -1,19 +1,22 @@
 import { IToken, scanSource } from './scanner.js'
 import { Token } from './tokens.js'
 
-export const extractReferences = (script: string) => {
-  type Ref = {
-    position: number
-    from: number
-    to: number
-    token: IToken
-    type: 'ref' | 'user' | 'scope'
-    alias?: string
-    path: (string | number)[] | null
-  }
-  const refs: Ref[] = []
+type VarRefPath = (string | number)[] | null
+type VarRef = {
+  position: number
+  from: number
+  to: number
+  token: IToken
+  type: 'ref' | 'user' | 'scope'
+  alias?: string
+  path: VarRefPath
+  pathLong: VarRefPath
+}
 
-  const stack = new Stacker<number, Omit<Ref, 'from' | 'to'>>()
+export const extractReferences = (script: string) => {
+  const refs: VarRef[] = []
+
+  const stack = new Stacker<number, Omit<VarRef, 'from' | 'to' | 'pathLong'>>()
   stack.inc(0)
 
   const [ tokens ] = scanSource(script)
@@ -73,13 +76,14 @@ export const extractReferences = (script: string) => {
         refs.push({
           from: frame.scope,
           to: token.offset,
+          pathLong: null,
           ...item,
         })
       }
       continue
     }
     if (token.type === Token.Take) {
-      const idents: Omit<Ref, 'from' | 'to'>[] = []
+      const idents: Omit<VarRef, 'from' | 'to' | 'pathLong'>[] = []
       if (bucket[0]?.type === Token.CurlyLeft) {
         let next: IToken | undefined = bucket.shift()
         while (next && next.type !== Token.CurlyRight) {
@@ -110,12 +114,12 @@ export const extractReferences = (script: string) => {
           bucket.shift()
         }
       }
-      let basePath: null | (string | number)[] = null
+      let basePath: VarRefPath = null
       if (bucket[0].type === Token.From) {
         bucket.shift()
         const from = extractIdentMaybeChain()
         if (from) {
-          basePath = from.filter((t) => t.type !== Token.Dot).map((t) => t.lexeme)
+          basePath = pathFrom(from)
         }
       } else {
         const frames = stack.export()
@@ -206,11 +210,32 @@ export const extractReferences = (script: string) => {
       refs.push({
         from: frame.scope,
         to: script.length,
+        pathLong: null,
         ...item,
       })
     }
   }
   refs.sort((a, b) => a.position - b.position)
+  for (const ref of refs) {
+    let pathLong = ref.path
+    while (true) {
+      const p = pathLong?.[0]
+      if (!p) {
+        break
+      }
+      const other = refs.find((r) => {
+        return r.alias === p
+          && (r.type === 'ref' || r.type === 'user')
+          && r.from <= ref.position
+          && r.to >= ref.position
+      })
+      if (!other || !other.path) {
+        break
+      }
+      pathLong = [ ...other.path, ...pathLong!.slice(1) ]
+    }
+    ref.pathLong = pathLong
+  }
   return refs
 }
 

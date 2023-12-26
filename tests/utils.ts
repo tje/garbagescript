@@ -198,5 +198,76 @@ import { extractReferences } from '../src/utils.js'
     assert.equal(vars?.[3]?.alias, '$role')
   })
 
+  test('long path', () => {
+    const script = `
+      each $users as $user {
+        each $user.$profile.$settings as $setting {
+          each $setting.$options {
+            take $value
+          }
+        }
+      }
+    `
+    const vars = extractReferences(script)
+    const valueRef = vars.find((v) => v.alias === '$value')
+    assert.equal(valueRef?.alias, '$value')
+    assert.equal(valueRef?.path, [ '$setting', '$options', '#', '$value' ])
+    assert.equal(valueRef?.pathLong, [
+      '$users',
+      '#',
+      '$profile',
+      '$settings',
+      '#',
+      '$options',
+      '#',
+      '$value',
+    ])
+  })
+
+  test('long path, scope fitting', () => {
+    const script = `
+      each $users as $user {
+        each $user.$profile.$settings as $setting {
+          each $setting.$options {
+            take $value
+          }
+        }
+      }
+
+      let $test = $value
+    `
+    const vars = extractReferences(script)
+    const testRef = vars.find((v) => v.alias === '$test')
+    assert.equal(testRef?.alias, '$test')
+    assert.equal(testRef?.path, [ '$value' ])
+    assert.equal(testRef?.pathLong, [ '$value' ])
+  })
+
+  test('positioning', () => {
+    const script = `
+      each $things as $thing {
+        take { $name }
+        let $words = $name:words
+        each $words as $word {
+          if $word == "" {
+            reject $name
+            because "Test"
+          }
+        }
+      }
+    `
+    const vars = extractReferences(script)
+
+    const wordsRef = vars.find((v) => v.type === 'ref' && v.alias === '$words')
+    const wordsIdx = script.indexOf('$words')
+    assert.not.equal(wordsIdx, -1)
+    assert.equal(wordsRef?.position, wordsIdx)
+
+    const wordRef = vars.find((v) => v.type === 'ref' && v.alias === '$word')
+    const wordIdx = script.indexOf('$word ')
+    assert.not.equal(wordIdx, -1)
+    assert.equal(wordRef?.position, wordIdx)
+  })
+
   test.run()
 })()
