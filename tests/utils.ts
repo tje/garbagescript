@@ -1,6 +1,6 @@
 import { suite } from 'uvu'
 import * as assert from 'uvu/assert'
-import { extractReferences } from '../src/utils.js'
+import { extractDeclarations } from '../src/utils.js'
 
 (() => {
   const test = suite('var collection')
@@ -9,7 +9,7 @@ import { extractReferences } from '../src/utils.js'
     const script = `
       let $x = "sup"
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     assert.equal(vars?.[0]?.path, null)
     assert.equal(vars?.[0]?.type, 'user')
     assert.equal(vars?.[0]?.alias, '$x')
@@ -19,7 +19,7 @@ import { extractReferences } from '../src/utils.js'
     const script = `
       let $x = $y
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     assert.equal(vars?.[0]?.path, [ '$y' ])
     assert.equal(vars?.[0]?.type, 'ref')
     assert.equal(vars?.[0]?.alias, '$x')
@@ -29,7 +29,7 @@ import { extractReferences } from '../src/utils.js'
     const script = `
       let $x = $y.$z
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     assert.equal(vars?.[0]?.path, [ '$y', '$z' ])
     assert.equal(vars?.[0]?.type, 'ref')
     assert.equal(vars?.[0]?.alias, '$x')
@@ -39,7 +39,7 @@ import { extractReferences } from '../src/utils.js'
     const script = `
       each $things {}
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     assert.equal(vars?.[0]?.path, [ '$things', '#' ])
     assert.equal(vars?.[0]?.type, 'scope')
   })
@@ -48,7 +48,7 @@ import { extractReferences } from '../src/utils.js'
     const script = `
       each $things as $thing {}
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     assert.equal(vars?.[0]?.path, [ '$things', '#' ])
     assert.equal(vars?.[0]?.type, 'scope')
     assert.equal(vars?.[1]?.path, [ '$things', '#' ])
@@ -60,7 +60,7 @@ import { extractReferences } from '../src/utils.js'
     const script = `
       each $thing in $things {}
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     // Note these are in reverse order from "each .. as" because of alias order
     assert.equal(vars?.[0]?.path, [ '$things', '#' ])
     assert.equal(vars?.[0]?.type, 'ref')
@@ -75,7 +75,7 @@ import { extractReferences } from '../src/utils.js'
         take $name
       }
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     assert.equal(vars?.[0]?.path, [ '$things', '#' ])
     assert.equal(vars?.[0]?.type, 'scope')
     assert.equal(vars?.[1]?.path, [ '$things', '#', '$name' ])
@@ -89,7 +89,7 @@ import { extractReferences } from '../src/utils.js'
         take { $name as $alias }
       }
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     assert.equal(vars?.[0]?.path, [ '$things', '#' ])
     assert.equal(vars?.[0]?.type, 'scope')
     assert.equal(vars?.[1]?.path, [ '$things', '#', '$name' ])
@@ -101,7 +101,7 @@ import { extractReferences } from '../src/utils.js'
     const script = `
       take { $email } from $user.$contact
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     assert.equal(vars?.[0]?.path, [ '$user', '$contact', '$email' ])
     assert.equal(vars?.[0]?.type, 'ref')
     assert.equal(vars?.[0]?.alias, '$email')
@@ -111,7 +111,7 @@ import { extractReferences } from '../src/utils.js'
     const script = `
       take { $email as $alias } from $user.$contact
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     assert.equal(vars?.[0]?.path, [ '$user', '$contact', '$email' ])
     assert.equal(vars?.[0]?.type, 'ref')
     assert.equal(vars?.[0]?.alias, '$alias')
@@ -121,7 +121,7 @@ import { extractReferences } from '../src/utils.js'
     const script = `
       take { $email_address as $email, $phone_number as $phone } from $user.$contact
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     assert.equal(vars?.[0]?.path, [ '$user', '$contact', '$email_address' ])
     assert.equal(vars?.[0]?.type, 'ref')
     assert.equal(vars?.[0]?.alias, '$email')
@@ -135,7 +135,7 @@ import { extractReferences } from '../src/utils.js'
       each $user.$roles {
       }
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     assert.equal(vars?.[0]?.path, [ '$user', '$roles', '#' ])
     assert.equal(vars?.[0]?.type, 'scope')
   })
@@ -147,7 +147,7 @@ import { extractReferences } from '../src/utils.js'
         }
       }
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     assert.equal(vars?.[0]?.path, [ '$users', '#' ])
     assert.equal(vars?.[0]?.type, 'scope')
     assert.equal(vars?.[1]?.path, [ '$games', '#' ])
@@ -165,7 +165,7 @@ import { extractReferences } from '../src/utils.js'
         }
       }
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     assert.equal(vars?.[0]?.path, [ '$users', '#' ])
     assert.equal(vars?.[0]?.type, 'scope')
     assert.equal(vars?.[1]?.path, [ '$users', '#', '$roles' ])
@@ -185,7 +185,7 @@ import { extractReferences } from '../src/utils.js'
         }
       }
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     assert.equal(vars?.[0]?.path, [ '$users', '#' ])
     assert.equal(vars?.[0]?.type, 'scope')
     assert.equal(vars?.[1]?.path, [ '$users', '#' ])
@@ -208,7 +208,7 @@ import { extractReferences } from '../src/utils.js'
         }
       }
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     const valueRef = vars.find((v) => v.alias === '$value')
     assert.equal(valueRef?.alias, '$value')
     assert.equal(valueRef?.path, [ '$setting', '$options', '#', '$value' ])
@@ -236,7 +236,7 @@ import { extractReferences } from '../src/utils.js'
 
       let $test = $value
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     const testRef = vars.find((v) => v.alias === '$test')
     assert.equal(testRef?.alias, '$test')
     assert.equal(testRef?.path, [ '$value' ])
@@ -255,7 +255,7 @@ import { extractReferences } from '../src/utils.js'
         }
       }
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
     const testRef = vars.find((v) => v.alias === '$test')
     assert.equal(testRef?.alias, '$test')
     assert.equal(testRef?.path, [ '$x' ])
@@ -274,7 +274,7 @@ import { extractReferences } from '../src/utils.js'
   ]
   for (const [ val, expected ] of userTypeTests) {
     test(`user type: ${val} == ${expected}`, () => {
-      const vars = extractReferences(`let $x = ${val}`)
+      const vars = extractDeclarations(`let $x = ${val}`)
       assert.equal(vars?.[0]?.alias, '$x')
       assert.equal(vars?.[0]?.type, 'user')
       assert.equal(vars?.[0]?.userType, expected)
@@ -287,7 +287,7 @@ import { extractReferences } from '../src/utils.js'
   ]
   for (const [ val, orn, expected ] of userTypeOrnTests) {
     test(`user type (var + ornament): ${val}:${orn} == ${expected}`, () => {
-      const vars = extractReferences(`let $x = ${val}\nlet $y = $x:${orn}`)
+      const vars = extractDeclarations(`let $x = ${val}\nlet $y = $x:${orn}`)
       assert.equal(vars?.[0]?.alias, '$x')
       assert.equal(vars?.[0]?.type, 'user')
       assert.equal(vars?.[1]?.alias, '$y')
@@ -309,7 +309,7 @@ import { extractReferences } from '../src/utils.js'
         }
       }
     `
-    const vars = extractReferences(script)
+    const vars = extractDeclarations(script)
 
     const wordsRef = vars.find((v) => v.type === 'user' && v.alias === '$words')
     const wordsIdx = script.indexOf('$words')

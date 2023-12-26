@@ -14,7 +14,7 @@ type VarRef = {
   pathLong: VarRefPath
 }
 
-export const extractReferences = (script: string) => {
+export const extractDeclarations = (script: string) => {
   const refs: VarRef[] = []
 
   const stack = new Stacker<number, Omit<VarRef, 'from' | 'to' | 'pathLong'>>()
