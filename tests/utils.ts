@@ -262,6 +262,40 @@ import { extractReferences } from '../src/utils.js'
     assert.equal(testRef?.pathLong, null)
   })
 
+  const userTypeTests = [
+    [ '"test"', 'string' ],
+    [ '100', 'number' ],
+    [ 'true', 'boolean' ],
+    [ '[1]', 'number[]' ],
+    [ '["test"]', 'string[]' ],
+    [ '[true]', 'boolean[]' ],
+    [ '"test":characters', 'string[]' ],
+    [ '"test":length', 'number' ],
+  ]
+  for (const [ val, expected ] of userTypeTests) {
+    test(`user type: ${val} == ${expected}`, () => {
+      const vars = extractReferences(`let $x = ${val}`)
+      assert.equal(vars?.[0]?.alias, '$x')
+      assert.equal(vars?.[0]?.type, 'user')
+      assert.equal(vars?.[0]?.userType, expected)
+    })
+  }
+  const userTypeOrnTests = [
+    [ '"test"', 'lines', 'string[]' ],
+    [ '[1, 2]', 'length', 'number' ],
+    [ '50', 'round', 'number' ],
+  ]
+  for (const [ val, orn, expected ] of userTypeOrnTests) {
+    test(`user type (var + ornament): ${val}:${orn} == ${expected}`, () => {
+      const vars = extractReferences(`let $x = ${val}\nlet $y = $x:${orn}`)
+      assert.equal(vars?.[0]?.alias, '$x')
+      assert.equal(vars?.[0]?.type, 'user')
+      assert.equal(vars?.[1]?.alias, '$y')
+      assert.equal(vars?.[1]?.type, 'user')
+      assert.equal(vars?.[1]?.userType, expected)
+    })
+  }
+
   test('positioning', () => {
     const script = `
       each $things as $thing {
@@ -277,7 +311,7 @@ import { extractReferences } from '../src/utils.js'
     `
     const vars = extractReferences(script)
 
-    const wordsRef = vars.find((v) => v.type === 'ref' && v.alias === '$words')
+    const wordsRef = vars.find((v) => v.type === 'user' && v.alias === '$words')
     const wordsIdx = script.indexOf('$words')
     assert.not.equal(wordsIdx, -1)
     assert.equal(wordsRef?.position, wordsIdx)

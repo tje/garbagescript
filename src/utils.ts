@@ -1,13 +1,14 @@
 import { IToken, scanSource } from './scanner.js'
 import { Token } from './tokens.js'
 
-type VarRefPath = (string | number)[] | null
+type VarRefPath = string[] | null
 type VarRef = {
   position: number
   from: number
   to: number
   token: IToken
   type: 'ref' | 'user' | 'scope'
+  userType?: 'string' | 'number' | 'boolean' | 'string[]' | 'number[]' | 'boolean[]' | string
   alias?: string
   path: VarRefPath
   pathLong: VarRefPath
@@ -50,6 +51,61 @@ export const extractReferences = (script: string) => {
     }
     if (idx > 0) {
       return bucket.splice(0, idx)
+    }
+    return undefined
+  }
+  const extractMaybeValueType = (): VarRef['userType'] => {
+    if (bucket[1]?.type === Token.Ornament) {
+      const hold = bucket.splice(0, 2)
+      const v = extractMaybeValueType()
+      bucket.unshift(...hold)
+      return v
+    }
+    switch (bucket[0].type) {
+      case Token.BoolLiteral: {
+        return 'boolean'
+      }
+      case Token.NumberLiteral: {
+        return 'number'
+      }
+      case Token.StringLiteral: {
+        return 'string'
+      }
+      case Token.BraceLeft: {
+        const hold = bucket.shift()!
+        const v = extractMaybeValueType()
+        bucket.unshift(hold)
+        return v + '[]'
+      }
+      case Token.Ornament:
+      case Token.Unique:
+      case Token.Dot:
+      case Token.Identifier: {
+        const hold = bucket.shift()!
+        const v = extractMaybeValueType()
+        bucket.unshift(hold)
+        return v
+      }
+      case Token.Lowercase:
+      case Token.Uppercase:
+      case Token.Trim:
+      case Token.Reverse: {
+        return 'string'
+      }
+      case Token.Characters:
+      case Token.Words:
+      case Token.Lines: {
+        return 'string[]'
+      }
+      case Token.Length:
+      case Token.Sum:
+      case Token.Minimum:
+      case Token.Maximum:
+      case Token.Ceil:
+      case Token.Floor:
+      case Token.Round: {
+        return 'number'
+      }
     }
     return undefined
   }
@@ -194,12 +250,14 @@ export const extractReferences = (script: string) => {
         continue
       }
       const val = extractIdentMaybeChain()
+      const userType = extractMaybeValueType()
       stack.push({
         path: val ? pathFrom(val) : null,
         position: ident.offset,
         token: ident,
-        type: val ? 'ref' : 'user',
+        type: val && !userType ? 'ref' : 'user',
         alias: ident.lexeme,
+        userType,
       })
     }
   }
