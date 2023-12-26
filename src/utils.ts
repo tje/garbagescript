@@ -225,11 +225,14 @@ export const extractReferences = (script: string) => {
       }
       const other = refs.find((r) => {
         return r.alias === p
-          && (r.type === 'ref' || r.type === 'user')
           && r.from <= ref.position
           && r.to >= ref.position
       })
-      if (!other || !other.path) {
+      if (!other) {
+        break
+      }
+      if (!other.path || other.type === 'user') {
+        pathLong = null
         break
       }
       pathLong = [ ...other.path, ...pathLong!.slice(1) ]

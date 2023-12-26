@@ -243,6 +243,25 @@ import { extractReferences } from '../src/utils.js'
     assert.equal(testRef?.pathLong, [ '$value' ])
   })
 
+  test('refs to user vars do not have long path', () => {
+    const script = `
+      each $users as $user {
+        each $user.$profile.$settings as $setting {
+          let $x = "test"
+          each $setting.$options {
+            take $value
+            let $test = $x
+          }
+        }
+      }
+    `
+    const vars = extractReferences(script)
+    const testRef = vars.find((v) => v.alias === '$test')
+    assert.equal(testRef?.alias, '$test')
+    assert.equal(testRef?.path, [ '$x' ])
+    assert.equal(testRef?.pathLong, null)
+  })
+
   test('positioning', () => {
     const script = `
       each $things as $thing {
