@@ -271,6 +271,8 @@ import { extractDeclarations } from '../src/utils.js'
     [ '[true]', 'boolean[]' ],
     [ '"test":characters', 'string[]' ],
     [ '"test":length', 'number' ],
+    [ 'today', 'timestamp' ],
+    [ 'today:year', 'number' ],
   ]
   for (const [ val, expected ] of userTypeTests) {
     test(`user type: ${val} == ${expected}`, () => {

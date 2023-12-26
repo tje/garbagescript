@@ -2,13 +2,14 @@ import { IToken, scanSource } from './scanner.js'
 import { Token } from './tokens.js'
 
 type VarRefPath = string[] | null
+type VarRefUserType = 'string' | 'number' | 'boolean' | 'timestamp'
 type VarRef = {
   position: number
   from: number
   to: number
   token: IToken
   type: 'ref' | 'user' | 'scope'
-  userType?: 'string' | 'number' | 'boolean' | 'string[]' | 'number[]' | 'boolean[]' | string
+  userType?: VarRefUserType | `${VarRefUserType}[]` | string
   alias?: string
   path: VarRefPath
   pathLong: VarRefPath
@@ -71,6 +72,9 @@ export const extractDeclarations = (script: string) => {
       case Token.StringLiteral: {
         return 'string'
       }
+      case Token.TimeNow: {
+        return 'timestamp'
+      }
       case Token.BraceLeft: {
         const hold = bucket.shift()!
         const v = extractMaybeValueType()
@@ -97,6 +101,9 @@ export const extractDeclarations = (script: string) => {
       case Token.Lines: {
         return 'string[]'
       }
+      case Token.UnitYears:
+      case Token.UnitDays:
+      case Token.UnitMonths:
       case Token.Length:
       case Token.Sum:
       case Token.Minimum:
