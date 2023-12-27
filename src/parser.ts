@@ -519,9 +519,11 @@ class Parser {
     }
     if (this.match(Token.StringLiteral)) {
       const t = this.previous().lexeme
+      const value = t.substring(1, t.length - 1)
+        .replace(/\\"/g, '"')
       return {
         type: NodeType.Literal,
-        value: t.substring(1, t.length - 1),
+        value,
         start,
         end: start + t.length,
       }
