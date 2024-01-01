@@ -2,22 +2,39 @@ import { IToken } from './scanner.js'
 import { Token } from './tokens.js'
 
 export class ParseError extends Error {
-  constructor (msg: string, private _token: number | IToken) {
+  constructor (msg: string, private _start: number | IToken, private _end?: number | IToken) {
     super(msg)
   }
 
   get offset () {
-    if (typeof this._token === 'number') {
-      return this._token
+    if (typeof this._start === 'number') {
+      return this._start
     }
-    return this._token.offset
+    return this._start.offset
+  }
+
+  get start () {
+    return this.offset
+  }
+
+  get end () {
+    if (typeof this._end === 'number') {
+      return this._end
+    }
+    if (this._end) {
+      return this._end.offset + this._end.lexeme.length
+    }
+    if (typeof this._start === 'number') {
+      return this._start
+    }
+    return this._start.offset + this._start.lexeme.length
   }
 
   get token () {
-    if (typeof this._token === 'number') {
+    if (typeof this._start === 'number') {
       return undefined
     }
-    return this._token
+    return this._start
   }
 }
 
