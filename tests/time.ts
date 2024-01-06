@@ -166,6 +166,13 @@ test('date ornaments', () => {
   assert.is(evaluate('$release_date:day == 4', data), true)
 })
 
+test('time ornaments', () => {
+  const data = { $dt: new Date(2020, 0, 1, 13, 45, 15) }
+  assert.is(evaluate('$dt:hour == 13', data), true)
+  assert.is(evaluate('$dt:minute == 45', data), true)
+  assert.is(evaluate('$dt:second == 15', data), true)
+})
+
 test.skip('large-scale date math', () => {
   const data = {
     $release_date: new Date(2023, 5, 4),

@@ -208,6 +208,9 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             case Token.UnitYears: return new GasNumber(v.getFullYear())
             case Token.UnitMonths: return new GasNumber(v.getMonth() + 1)
             case Token.UnitDays: return new GasNumber(v.getDate())
+            case Token.UnitHours: return new GasNumber(v.getHours())
+            case Token.UnitMinutes: return new GasNumber(v.getMinutes())
+            case Token.UnitSeconds: return new GasNumber(v.getSeconds())
           }
         }
         switch (op.type) {
