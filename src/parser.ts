@@ -606,6 +606,16 @@ class Parser {
       }
     }
 
+    if (this.match(Token.Regex)) {
+      const token = this.previous()
+      return {
+        type: NodeType.RegexPattern,
+        value: token,
+        start: token.offset,
+        end: token.offset + token.lexeme.length,
+      }
+    }
+
     // console.log(this.peek())
     throw new ParseError('Bad syntax', this.peek())
     // return {
@@ -697,6 +707,7 @@ export enum NodeType {
   InspectExpr,
   MetaKeyword,
   SkipStatement,
+  RegexPattern,
 }
 
 type IASTNodeLiteral = {
@@ -803,6 +814,10 @@ type IASTNodeSkipStatement = {
   type: NodeType.SkipStatement
   value: IToken
 }
+type IASTNodeRegexPattern = {
+  type: NodeType.RegexPattern
+  value: IToken
+}
 export type IASTNode = (
     IASTNodeLiteral
   | IASTNodeMeasurement
@@ -830,6 +845,7 @@ export type IASTNode = (
   | IASTNodeInspectExpression
   | IASTNodeMetaKeyword
   | IASTNodeSkipStatement
+  | IASTNodeRegexPattern
 ) & {
   start: number
   end: number

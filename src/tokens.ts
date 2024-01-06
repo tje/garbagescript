@@ -38,6 +38,7 @@ export enum Token {
   NumberLiteral = 'NUMBER',
   StringLiteral = 'STRING',
   BoolLiteral = 'BOOL',
+  Regex = 'REGEX',
 
   EOL = 'EOL',
   EOF = 'EOF',
@@ -96,6 +97,7 @@ export const MATCHER = {
   [Token.EOL]: /^[\r\n;]/,
   [Token.Whitespace]: /^[ \t]+/,
   [Token.Comment]: /^\/\/.*?(?=[\r\n]|$)/,
+  [Token.Regex]: /((?:^|[^$\w\xA0-\uFFFF."'\])\s]|\b(?:return|yield))\s*)\/(?:(?:\[(?:[^\]\\\r\n]|\\.)*\]|\\.|[^/\\\[\r\n])+\/[dgimyus]{0,7}|(?:\[(?:[^[\]\\\r\n]|\\.|\[(?:[^[\]\\\r\n]|\\.|\[(?:[^[\]\\\r\n]|\\.)*\])*\])*\]|\\.|[^/\\\[\r\n])+\/[dgimyus]{0,7}v[dgimyus]{0,7})(?=(?:\s|\/\*(?:[^*]|\*(?!\/))*\*\/)*(?:$|[\r\n,.;:})\]]|\/\/))/,
   [Token.PlusEquals]: /^\+=/,
   [Token.MinusEquals]: /^-=/,
   [Token.MultiplyEquals]: /^\*=/,

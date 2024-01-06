@@ -1,7 +1,7 @@
 import { IASTNode, NodeType } from '../parser.js'
 import { createStack } from './stack.js'
 import { Token } from '../tokens.js'
-import { DurationUnit, GasArray, GasBoolean, GasDate, GasDuration, GasNumber, GasString, GasStruct, GasUnknown, GasValue } from '../value/value.js'
+import { DurationUnit, GasArray, GasBoolean, GasDate, GasDuration, GasNumber, GasRegex, GasString, GasStruct, GasUnknown, GasValue } from '../value/value.js'
 import { DiagnosticSeverity, EvaluationResults, InterpreterDiagnostic, RejectMessage, ValidationResults } from './results.js'
 import { GlobalOrnaments } from '../index.js'
 
@@ -71,6 +71,13 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case 'number': return new GasNumber(node.value)
           case 'boolean': return new GasBoolean(node.value)
         }
+      case NodeType.RegexPattern: {
+        const expr = node.value.lexeme
+        const endIdx = expr.lastIndexOf('/')
+        const pattern = expr.substring(1, endIdx)
+        const flags = expr.substring(endIdx + 1)
+        return new GasRegex(new RegExp(pattern, flags))
+      }
       case NodeType.Measurement:
         const v = resolveAstNode(node.value[0], analyzeOnly)
         if (!v.is(GasNumber)) {
@@ -327,8 +334,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             if (!a.is(GasString)) {
               pitchDiagnostic(`Expected a string, got ${a.type} instead`, node.value[0], DiagnosticSeverity.Warning)
             }
-            if (!b.is(GasString)) {
-              pitchDiagnostic(`Expected a string, got ${b.type} instead`, node.value[2], DiagnosticSeverity.Warning)
+            if (!b.is(GasString) && !b.is(GasRegex)) {
+              pitchDiagnostic(`Expected a string or pattern, got ${b.type} instead`, node.value[2], DiagnosticSeverity.Warning)
             }
           break
           case Token.Of:
@@ -373,6 +380,9 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           case Token.NotEquals: return new GasBoolean(left != right)
           case Token.Includes: return new GasBoolean(left?.includes?.(right))
           case Token.Matches:
+            if (a.is(GasString) && b.is(GasRegex)) {
+              return new GasBoolean(b.unwrap().test(a.unwrap()))
+            }
             return new GasBoolean(
               a.is(GasString) && b.is(GasString) && left.toLowerCase().includes(right.toLowerCase())
             )

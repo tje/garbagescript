@@ -11,6 +11,7 @@ type GasValueConstructor =
   | typeof GasDuration
   | typeof GasNumber
   | typeof GasString
+  | typeof GasRegex
   | typeof GasStruct
   | typeof GasUnknown
 
@@ -49,6 +50,9 @@ export abstract class GasValue<T = unknown> {
     if (value instanceof Date) {
       return new GasDate(value, path)
     }
+    if (value instanceof RegExp) {
+      return new GasRegex(value, path)
+    }
     if (Array.isArray(value)) {
       const items = value.map((e, idx) => this.from(e, [ ...path, idx ])) as GasValue<unknown>[]
       return new GasArray(items, path)
@@ -71,6 +75,7 @@ export abstract class GasValue<T = unknown> {
       || v instanceof GasString
       || v instanceof GasStruct
       || v instanceof GasDuration
+      || v instanceof GasRegex
       || v instanceof GasUnknown
   }
 
@@ -187,6 +192,19 @@ export class GasDate extends GasValue<Date> {
   }
   public toDisplay (): string {
     return this.inner.toLocaleString()
+  }
+}
+
+export class GasRegex extends GasValue<RegExp> {
+  protected _type = 'regex'
+  public unwrap (): RegExp {
+    return this._value
+  }
+  public toDebug () {
+    return `"${this.toDisplay()}"`
+  }
+  public toDisplay (): string {
+    return this.unwrap().source
   }
 }
 
