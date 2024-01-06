@@ -73,6 +73,8 @@ class StopEarly extends Error {
   }
 }
 
+class SkipSignal extends Error {}
+
 export enum DiagnosticSeverity {
   Error = 'error',
   Warning = 'warning',
@@ -475,10 +477,28 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       case NodeType.ExprStatement: return resolveAstNode(node.value, analyzeOnly)
       case NodeType.StatementList: {
         let v: GasValue = new GasUnknown(undefined)
-        node.value.forEach((n) => {
-          v = resolveAstNode(n, analyzeOnly)
-        })
+        let _stop = false
+        for (const n of node.value) {
+          try {
+            v = resolveAstNode(n, _stop || analyzeOnly)
+          } catch (e) {
+            if (e instanceof SkipSignal) {
+              _stop = true
+            } else {
+              throw e
+            }
+          }
+        }
+        if (_stop) {
+          throw new SkipSignal()
+        }
         return v
+      }
+      case NodeType.SkipStatement: {
+        if (!analyzeOnly) {
+          throw new SkipSignal()
+        }
+        return new GasUnknown(undefined)
       }
       case NodeType.DeclareStatement: {
         const key = node.value[0].lexeme
@@ -590,9 +610,16 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           if (node.value[2]) {
             stack.write(node.value[2].lexeme, item)
           }
-          out.push(resolveAstNode(node.value[1], analyzeOnly))
-          stack.pop()
-          idx += 1
+          try {
+            out.push(resolveAstNode(node.value[1], analyzeOnly))
+          } catch (e) {
+            if (!(e instanceof SkipSignal)) {
+              throw e
+            }
+          } finally {
+            stack.pop()
+            idx += 1
+          }
         }
         return new GasArray(out)
       }

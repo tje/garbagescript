@@ -90,6 +90,9 @@ class Parser {
     if (this.match(Token.Print)) {
       return this.parsePrintStatement()
     }
+    if (this.match(Token.Skip)) {
+      return this.parseSkipStatement()
+    }
     return this.parseExpressionStatement()
   }
   private parseTakeStatement (): IASTNode {
@@ -269,6 +272,15 @@ class Parser {
       value,
       start,
       end: value.end,
+    }
+  }
+  private parseSkipStatement (): IASTNode {
+    const token = this.previous()
+    return {
+      type: NodeType.SkipStatement,
+      value: token,
+      start: token.offset,
+      end: token.offset + token.lexeme.length,
     }
   }
 
@@ -683,6 +695,7 @@ export enum NodeType {
   ValidateStatement,
   InspectExpr,
   MetaKeyword,
+  SkipStatement,
 }
 
 type IASTNodeLiteral = {
@@ -785,6 +798,10 @@ type IASTNodeMetaKeyword = {
   type: NodeType.MetaKeyword
   value: IToken
 }
+type IASTNodeSkipStatement = {
+  type: NodeType.SkipStatement
+  value: IToken
+}
 export type IASTNode = (
     IASTNodeLiteral
   | IASTNodeMeasurement
@@ -811,6 +828,7 @@ export type IASTNode = (
   | IASTNodeValidateStatement
   | IASTNodeInspectExpression
   | IASTNodeMetaKeyword
+  | IASTNodeSkipStatement
 ) & {
   start: number
   end: number

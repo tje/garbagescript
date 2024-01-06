@@ -61,6 +61,7 @@ export enum Token {
   Validate = 'VALIDATE',
   Because = 'BECAUSE',
   Today = 'TODAY',
+  Skip = 'SKIP',
 
   Length = 'LENGTH',
   Minimum = 'MINIMUM',
@@ -142,6 +143,7 @@ export const MATCHER = {
   [Token.As]: /^as\b/,
   [Token.Or]: /^or\b/,
   [Token.And]: /^and\b/,
+  [Token.Skip]: /^(skip|continue)\b/,
   [Token.Reject]: /^reject\b/,
   [Token.Validate]: /^validate\b/,
   [Token.Because]: /^because\b/,
