@@ -260,4 +260,46 @@ test('each ... as', () => {
   assert.equal(evaluate(script, data), 6)
 })
 
+test('map with statement list', () => {
+  const script = `
+    let $words = ["one", "two", "three"]
+    each $words {
+      it:uppercase
+    }
+  `
+  assert.equal(evaluate(script), ['ONE', 'TWO', 'THREE'])
+})
+
+test('map with single expression', () => {
+  const script = `
+    let $words = ["one", "two", "three"]
+    each $words it:uppercase
+  `
+  assert.equal(evaluate(script), ['ONE', 'TWO', 'THREE'])
+})
+
+test('filtering with skip', () => {
+  const script = `
+    let $words = ["one", "two", "three"]
+    each $words {
+      if it == "two" {
+        skip
+      }
+      it
+    }
+  `
+  assert.equal(evaluate(script), ['one', 'three'])
+})
+
+test('skip all', () => {
+  const script = `
+    let $words = ["one", "two", "three"]
+    each $words {
+      skip
+      "test"
+    }
+  `
+  assert.equal(evaluate(script), [])
+})
+
 test.run()
