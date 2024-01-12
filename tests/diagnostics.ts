@@ -51,6 +51,30 @@ undef_vars: {
     assert.match(res[0].message, 'variable')
     assert.match(res[0].message, '$one')
   })
+  t('if false if false', () => {
+    const res = run('if false { if false { $one } }')
+    assert.equal(res.length, 1)
+    assert.match(res[0].message, 'variable')
+    assert.match(res[0].message, '$one')
+  })
+  t('if true and $undeclared', () => {
+    const res = run('if true and $one {}')
+    assert.equal(res.length, 1)
+    assert.match(res[0].message, 'variable')
+    assert.match(res[0].message, '$one')
+  })
+  t('if false and $undeclared', () => {
+    const res = run('if false and $one {}')
+    assert.equal(res.length, 1)
+    assert.match(res[0].message, 'variable')
+    assert.match(res[0].message, '$one')
+  })
+  t('if true or $undeclared', () => {
+    const res = run('if true or $one {}')
+    assert.equal(res.length, 1)
+    assert.match(res[0].message, 'variable')
+    assert.match(res[0].message, '$one')
+  })
   t('each empty', () => {
     const res = run('each [] { $one }')
     assert.equal(res.length, 1)
@@ -69,6 +93,24 @@ undef_vars: {
     assert.match(res[0].message, 'iterable')
     assert.match(res[1].message, 'variable')
     assert.match(res[1].message, '$one')
+  })
+  t('reject because', () => {
+    const res = run('validate { reject $one because "Test" }')
+    assert.equal(res.length, 1)
+    assert.match(res[0].message, 'variable')
+    assert.match(res[0].message, '$one')
+  })
+  t('if true reject because', () => {
+    const res = run('validate { if true { reject $one because "Test" } }')
+    assert.equal(res.length, 1)
+    assert.match(res[0].message, 'variable')
+    assert.match(res[0].message, '$one')
+  })
+  t('if false reject because', () => {
+    const res = run('validate { if false { reject $one because "Test" } }')
+    assert.equal(res.length, 1)
+    assert.match(res[0].message, 'variable')
+    assert.match(res[0].message, '$one')
   })
   t.run()
 }
