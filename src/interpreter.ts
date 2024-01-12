@@ -673,6 +673,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
           if (validateCounter === 0) {
             throw err
           }
+        } else if (node.value[1] && (analyzeOnly || options.analyze)) {
+          resolveAstNode(node.value[1], true)
         }
         return new GasUnknown(undefined)
       }
