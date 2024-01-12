@@ -598,12 +598,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
       case NodeType.IterStatement: {
         const items = resolveAstNode(node.value[0], analyzeOnly)
         const out = []
-        if (!items.is(GasArray)) {
-          pitchDiagnostic('Not iterable', node.value[0])
-          return items
-        }
         let idx = 0
-        for (const item of items.inner) {
+        const fn = (item: GasValue, idx: number, ao = analyzeOnly) => {
           stack.push()
           stack.write('__scope', item)
           stack.write('__index', new GasNumber(idx))
@@ -611,15 +607,31 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             stack.write(node.value[2].lexeme, item)
           }
           try {
-            out.push(resolveAstNode(node.value[1], analyzeOnly))
+            return resolveAstNode(node.value[1], ao)
+          } finally {
+            stack.pop()
+          }
+        }
+        if (!items.is(GasArray)) {
+          pitchDiagnostic('Not iterable', node.value[0])
+          if (options.analyze || analyzeOnly) {
+            fn(new GasUnknown(undefined), 0, true)
+          }
+          return items
+        }
+        for (const item of items.inner) {
+          try {
+            out.push(fn(item, idx))
           } catch (e) {
             if (!(e instanceof SkipSignal)) {
               throw e
             }
           } finally {
-            stack.pop()
             idx += 1
           }
+        }
+        if (idx === 0 && (options.analyze || analyzeOnly)) {
+          fn(new GasUnknown(undefined), 0, true)
         }
         return new GasArray(out)
       }
