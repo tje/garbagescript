@@ -74,5 +74,6 @@ export const createScript = (script: string, options: IInterpreterOptions = {}) 
 export { scanSource } from './scanner.js'
 export { Token } from './tokens.js'
 export { generateAST, ParseError, NodeType } from './parser.js'
-export { createInterpreter, InterpreterDiagnostic, TraceEntry } from './interpreter/interpreter.js'
+export { createInterpreter } from './interpreter/interpreter.js'
+export { InterpreterDiagnostic, TraceEntry } from './interpreter/results.js'
 export { extractDeclarations } from './utils.js'
