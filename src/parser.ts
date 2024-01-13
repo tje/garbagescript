@@ -278,7 +278,6 @@ class Parser {
       value,
       start,
       end: value.end,
-      inspect: this.claimInspect(),
     }
   }
   private parseSkipStatement (): IASTNode {
@@ -422,6 +421,7 @@ class Parser {
         value: [ op, right ],
         start: op.offset,
         end: right.end,
+        inspect: this.claimInspect(),
       }
     }
     return this.parseMeasurement()
@@ -435,6 +435,7 @@ class Parser {
         value: [ expr, unit ],
         start: expr.start,
         end: unit.offset + unit.lexeme.length,
+        inspect: this.claimInspect(),
       }
       if (this.match(Token.TimeAgo, Token.TimeAhead)) {
         const op = this.previous()
@@ -443,6 +444,7 @@ class Parser {
           value: [ measurement, op ],
           start: expr.start,
           end: op.offset + op.lexeme.length,
+          inspect: this.claimInspect(),
         }
       }
       return measurement
