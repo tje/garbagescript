@@ -645,9 +645,15 @@ class Parser {
 
   private match (...types: Token[]): boolean {
     for (const type of types) {
+      let c = this.cursor
+      if (type !== Token.Inspect) {
+        while (this.match(Token.Inspect)) {}
+      }
       if (this.check(type)) {
         this.advance()
         return true
+      } else {
+        this.cursor = c
       }
     }
     return false
@@ -655,6 +661,9 @@ class Parser {
 
   private claimInspect (): IToken | undefined {
     if (this.match(Token.Inspect)) {
+      if (this.check(Token.Inspect)) {
+        return undefined
+      }
       return this.previous()
     }
     return undefined
