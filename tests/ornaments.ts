@@ -150,4 +150,9 @@ test('floor', () => {
   assert.is(evaluate('5:floor'), 5)
 })
 
+test('sort', () => {
+  assert.equal(evaluate('[3,1,2]:sort'), [1,2,3])
+  assert.equal(evaluate('["e","c","f","a","d","b"]:sort'), ['a','b','c','d','e','f'])
+})
+
 test.run()
