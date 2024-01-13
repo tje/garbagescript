@@ -218,6 +218,23 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
               case Token.Ceil: return new GasNumber(Math.ceil(val.inner))
               case Token.Floor: return new GasNumber(Math.floor(val.inner))
             }
+          case Token.Sort: {
+            if (!val.is(GasArray)) {
+              pitchDiagnostic(`Ornament "${op.lexeme}" is intended to be used with arrays, but was applied to something unexpected here (${val.type})`, node)
+              return val
+            }
+            const copy = val.inner.sort((left, right) => {
+              const a: any = left.unwrap()
+              const b: any = right.unwrap()
+              if (a == b) {
+                return 0
+              }
+              return a > b
+                ? 1
+                : -1
+            })
+            return new GasArray(copy)
+          }
         }
         if (options.ornamentExtensions?.[op.lexeme]) {
           try {
