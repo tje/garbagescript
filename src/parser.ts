@@ -214,6 +214,7 @@ class Parser {
       value: [target, expr, scope],
       start,
       end: this.peek().offset,
+      inspect: this.claimInspect(),
     }
   }
   private parseIfStatement (): IASTNode {
@@ -235,9 +236,10 @@ class Parser {
   private parseDeclareStatement (): IASTNode {
     const start = this.previous().offset
     const name = this.consume(Token.Identifier, 'Expected identifier')
-    const inspect = this.claimInspect()
+    let inspect = this.claimInspect()
     this.consume(Token.Assign, 'Expected initializer')
     const value = this.parseStatement()
+    inspect ??= this.claimInspect()
     return {
       type: NodeType.DeclareStatement,
       value: [ name, value ],
@@ -306,6 +308,7 @@ class Parser {
         value: [ expr.value, value, token ],
         start: expr.start,
         end: value.end,
+        inspect: this.claimInspect(),
       }
     }
     return expr
