@@ -620,9 +620,6 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         }
         return new GasUnknown(undefined)
       }
-      case NodeType.InspectExpr: {
-        return resolveAstNode(node.value, analyzeOnly)
-      }
       case NodeType.MetaKeyword: {
         if (node.value.type === Token.Index) {
           const value = stack.read('__index')

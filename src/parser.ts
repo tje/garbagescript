@@ -447,9 +447,8 @@ class Parser {
     return expr
   }
   private parseOrnament (): IASTNode {
-    let expr = this.parseInspect()
+    let expr = this.parseIdentifier()
     while (this.match(Token.Ornament)) {
-      // const start = this.previous().offset
       if (!this.match(
         Token.Length,
         Token.Minimum,
@@ -486,28 +485,6 @@ class Parser {
         inspect: this.claimInspect(),
       }
     }
-    // while (this.match(Token.Inspect)) {
-    //   const op = this.previous()
-    //   expr = {
-    //     type: NodeType.InspectExpr,
-    //     value: expr,
-    //     start: expr.start,
-    //     end: op.offset + op.lexeme.length,
-    //   }
-    // }
-    return expr
-  }
-  private parseInspect (): IASTNode {
-    let expr = this.parseIdentifier()
-    // while (this.match(Token.Inspect)) {
-    //   const op = this.previous()
-    //   expr = {
-    //     type: NodeType.InspectExpr,
-    //     value: expr,
-    //     start: expr.start,
-    //     end: op.offset + op.lexeme.length,
-    //   }
-    // }
     return expr
   }
   private parseIdentifier (): IASTNode {
@@ -728,7 +705,6 @@ export enum NodeType {
   TakeStatement,
   RejectStatement,
   ValidateStatement,
-  InspectExpr,
   MetaKeyword,
   SkipStatement,
 }
@@ -825,10 +801,6 @@ type IASTNodeValidateStatement = {
   type: NodeType.ValidateStatement
   value: [ IASTNode[], IASTNode | null ]
 }
-type IASTNodeInspectExpression = {
-  type: NodeType.InspectExpr
-  value: IASTNode
-}
 type IASTNodeMetaKeyword = {
   type: NodeType.MetaKeyword
   value: IToken
@@ -861,7 +833,6 @@ export type IASTNode = (
   | IASTNodeTakeStatement
   | IASTNodeRejectStatement
   | IASTNodeValidateStatement
-  | IASTNodeInspectExpression
   | IASTNodeMetaKeyword
   | IASTNodeSkipStatement
 ) & {
