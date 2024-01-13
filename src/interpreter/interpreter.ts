@@ -462,7 +462,10 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         return new GasUnknown(undefined)
       }
       case NodeType.AssignStatement: {
-        const key = node.value[0]
+        const key = node.value[0].value
+        if (analyzeOnly || options.analyze) {
+          resolveAstNode(node.value[0], true)
+        }
         let value = resolveAstNode(node.value[1], analyzeOnly)
         const { type } = node.value[2]
         const prev = stack.read(key)

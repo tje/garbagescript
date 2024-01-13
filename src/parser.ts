@@ -304,7 +304,7 @@ class Parser {
       }
       return {
         type: NodeType.AssignStatement,
-        value: [ expr.value, value, token ],
+        value: [ expr, value, token ],
         start: expr.start,
         end: value.end,
         inspect: this.claimInspect(),
@@ -776,7 +776,7 @@ type IASTNodeStatementList = {
 }
 type IASTNodeAssignStatement = {
   type: NodeType.AssignStatement
-  value: [ string, IASTNode, IToken ]
+  value: [ IASTNode & IASTNodeVariable, IASTNode, IToken ]
 }
 type IASTNodeDeclareStatement = {
   type: NodeType.DeclareStatement
