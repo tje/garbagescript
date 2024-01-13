@@ -1,4 +1,4 @@
-import { GasStruct, GasValue } from './value/value'
+import { GasStruct, GasValue } from '../value/value.js'
 
 type IStackFrame = Map<string, IStackElement>
 type IStackElement = {

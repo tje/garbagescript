@@ -1,4 +1,4 @@
-import { IInterpreterOptions, createInterpreter } from './interpreter.js'
+import { IInterpreterOptions, createInterpreter } from './interpreter/interpreter.js'
 import { generateAST } from './parser.js'
 import { scanSource } from './scanner.js'
 
@@ -74,5 +74,5 @@ export const createScript = (script: string, options: IInterpreterOptions = {}) 
 export { scanSource } from './scanner.js'
 export { Token } from './tokens.js'
 export { generateAST, ParseError, NodeType } from './parser.js'
-export { createInterpreter, InterpreterDiagnostic, TraceEntry } from './interpreter.js'
+export { createInterpreter, InterpreterDiagnostic, TraceEntry } from './interpreter/interpreter.js'
 export { extractDeclarations } from './utils.js'

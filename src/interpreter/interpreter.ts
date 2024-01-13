@@ -1,7 +1,7 @@
-import { IASTNode, NodeType } from './parser.js'
+import { IASTNode, NodeType } from '../parser.js'
 import { createStack } from './stack.js'
-import { Token } from './tokens.js'
-import { DurationUnit, GasArray, GasBoolean, GasDate, GasDuration, GasNumber, GasString, GasStruct, GasUnknown, GasValue } from './value/value.js'
+import { Token } from '../tokens.js'
+import { DurationUnit, GasArray, GasBoolean, GasDate, GasDuration, GasNumber, GasString, GasStruct, GasUnknown, GasValue } from '../value/value.js'
 
 export class RejectMessage extends Error {
   constructor (private _msg: string, private _start: number, private _end: number, private _subject?: GasValue) {
