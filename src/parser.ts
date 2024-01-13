@@ -483,6 +483,7 @@ class Parser {
         value: [ expr, op ],
         start: expr.start,
         end: op.offset + op.lexeme.length,
+        inspect: this.claimInspect(),
       }
     }
     // while (this.match(Token.Inspect)) {
