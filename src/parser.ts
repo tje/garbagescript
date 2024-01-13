@@ -114,6 +114,7 @@ class Parser {
               value: '__scope.' + token.lexeme,
               start: token.offset,
               end: this.peek().offset,
+              inspect: this.claimInspect(),
             },
           ],
           start: this.previous().offset,
@@ -136,6 +137,7 @@ class Parser {
             value: '__scope.' + token.lexeme,
             start: token.offset,
             end: this.peek().offset,
+            inspect: this.claimInspect(),
           }
         ],
         start: token.offset,
@@ -233,6 +235,7 @@ class Parser {
   private parseDeclareStatement (): IASTNode {
     const start = this.previous().offset
     const name = this.consume(Token.Identifier, 'Expected identifier')
+    const inspect = this.claimInspect()
     this.consume(Token.Assign, 'Expected initializer')
     const value = this.parseStatement()
     return {
@@ -240,6 +243,7 @@ class Parser {
       value: [ name, value ],
       start,
       end: value.end,
+      inspect,
     }
   }
   private parseDefineStatement (): IASTNode {
@@ -272,6 +276,7 @@ class Parser {
       value,
       start,
       end: value.end,
+      inspect: this.claimInspect(),
     }
   }
   private parseSkipStatement (): IASTNode {
@@ -313,8 +318,9 @@ class Parser {
       expr = {
         type: NodeType.LogicalExpr,
         value: [ expr, op, right ],
-        start: op.offset,
+        start: expr.start,
         end: right.end,
+        inspect: this.claimInspect(),
       }
     }
     return expr
@@ -328,8 +334,9 @@ class Parser {
       expr = {
         type: NodeType.LogicalExpr,
         value: [ expr, op, right ],
-        start: op.offset,
+        start: expr.start,
         end: right.end,
+        inspect: this.claimInspect(),
       }
     }
 
@@ -344,8 +351,9 @@ class Parser {
       expr = {
         type: NodeType.BinaryExpr,
         value: [ expr, op, right ],
-        start: op.offset,
+        start: expr.start,
         end: right.end,
+        inspect: this.claimInspect(),
       }
     }
 
@@ -360,8 +368,9 @@ class Parser {
       expr = {
         type: NodeType.BinaryExpr,
         value: [ expr, op, right ],
-        start: op.offset,
+        start: expr.start,
         end: right.end,
+        inspect: this.claimInspect(),
       }
     }
 
@@ -376,8 +385,9 @@ class Parser {
       expr = {
         type: NodeType.BinaryExpr,
         value: [ expr, op, right ],
-        start: op.offset,
+        start: expr.start,
         end: right.end,
+        inspect: this.claimInspect(),
       }
     }
 
@@ -392,8 +402,9 @@ class Parser {
       expr = {
         type: NodeType.BinaryExpr,
         value: [ expr, op, right ],
-        start: op.offset, // or expr?
+        start: expr.start,
         end: right.end,
+        inspect: this.claimInspect(),
       }
     }
 
@@ -438,7 +449,7 @@ class Parser {
   private parseOrnament (): IASTNode {
     let expr = this.parseInspect()
     while (this.match(Token.Ornament)) {
-      const start = this.previous().offset
+      // const start = this.previous().offset
       if (!this.match(
         Token.Length,
         Token.Minimum,
@@ -470,32 +481,32 @@ class Parser {
       expr = {
         type: NodeType.OrnamentExpr,
         value: [ expr, op ],
-        start,
-        end: op.offset + op.lexeme.length,
-      }
-    }
-    while (this.match(Token.Inspect)) {
-      const op = this.previous()
-      expr = {
-        type: NodeType.InspectExpr,
-        value: expr,
         start: expr.start,
         end: op.offset + op.lexeme.length,
       }
     }
+    // while (this.match(Token.Inspect)) {
+    //   const op = this.previous()
+    //   expr = {
+    //     type: NodeType.InspectExpr,
+    //     value: expr,
+    //     start: expr.start,
+    //     end: op.offset + op.lexeme.length,
+    //   }
+    // }
     return expr
   }
   private parseInspect (): IASTNode {
     let expr = this.parseIdentifier()
-    while (this.match(Token.Inspect)) {
-      const op = this.previous()
-      expr = {
-        type: NodeType.InspectExpr,
-        value: expr,
-        start: expr.start,
-        end: op.offset + op.lexeme.length,
-      }
-    }
+    // while (this.match(Token.Inspect)) {
+    //   const op = this.previous()
+    //   expr = {
+    //     type: NodeType.InspectExpr,
+    //     value: expr,
+    //     start: expr.start,
+    //     end: op.offset + op.lexeme.length,
+    //   }
+    // }
     return expr
   }
   private parseIdentifier (): IASTNode {
@@ -511,6 +522,7 @@ class Parser {
         value,
         start,
         end: start + value.length,
+        inspect: this.claimInspect(),
       }
     }
     return this.parsePrimary()
@@ -524,6 +536,7 @@ class Parser {
         value: this.previous(),
         start,
         end: start + this.previous().lexeme.length,
+        inspect: this.claimInspect(),
       }
     }
     if (this.match(Token.BoolLiteral)) {
@@ -540,6 +553,7 @@ class Parser {
         value: new Date(),
         start,
         end: start + this.previous().lexeme.length,
+        inspect: this.claimInspect(),
       }
     }
     if (this.match(Token.NumberLiteral)) {
@@ -579,6 +593,7 @@ class Parser {
         },
         start,
         end: this.previous().offset,
+        inspect: this.claimInspect(),
       }
     }
     if (this.match(Token.BraceLeft)) {
@@ -592,6 +607,7 @@ class Parser {
         value: items,
         start,
         end: this.previous().offset + this.previous().lexeme.length,
+        inspect: this.claimInspect(),
       }
     }
 
@@ -603,6 +619,7 @@ class Parser {
         value: expr,
         start,
         end: this.previous().offset,
+        inspect: this.claimInspect(),
       }
     }
 
@@ -633,6 +650,13 @@ class Parser {
       }
     }
     return false
+  }
+
+  private claimInspect (): IToken | undefined {
+    if (this.match(Token.Inspect)) {
+      return this.previous()
+    }
+    return undefined
   }
 
   private advance (): IToken {
@@ -833,4 +857,5 @@ export type IASTNode = (
 ) & {
   start: number
   end: number
+  inspect?: IToken
 }
