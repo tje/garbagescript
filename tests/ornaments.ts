@@ -1,6 +1,6 @@
-import { test } from 'uvu'
+import { test, suite } from 'uvu'
 import * as assert from 'uvu/assert'
-import { evaluate } from '../src'
+import { GlobalOrnaments, evaluate } from '../src'
 
 test('string length', () => {
   const a = evaluate(`"x":length`)
@@ -155,5 +155,36 @@ test('sort', () => {
   assert.equal(evaluate('[3,1,2]:sort'), [1,2,3])
   assert.equal(evaluate('["e","c","f","a","d","b"]:sort'), ['a','b','c','d','e','f'])
 })
+
+globalOrnaments: {
+  const t = suite('global ornaments')
+
+  const split = (input: any) => typeof input === 'string' ? input.split(',') : input
+
+  const register = (key = 'split', fn = split) => {
+    return GlobalOrnaments.register(key, fn)
+  }
+
+  t('registration works', () => {
+    assert.not.throws(() => register())
+  })
+
+  t('key validation', () => {
+    assert.throws(() => register('Invalid!'), /key/)
+  })
+
+  t('global ornament works', () => {
+    register()
+    assert.equal(evaluate('"a,b":split'), ['a', 'b'])
+  })
+
+  t('unregister works', () => {
+    register('split')
+    assert.not.throws(() => GlobalOrnaments.unregister('split'))
+    assert.type(GlobalOrnaments.get('split'), 'undefined')
+  })
+
+  t.run()
+}
 
 test.run()
