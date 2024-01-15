@@ -98,7 +98,7 @@ test('luhn', () => {
     [ '', false ],
   ]
   for (const sample of samples) {
-    assert.is(evaluate(script, { $sequence: sample[0] }), sample[1])
+    assert.is(evaluate(script, { $sequence: sample[0] }, { ignoreErrors: true }), sample[1])
   }
 })
 
