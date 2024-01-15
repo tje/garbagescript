@@ -155,7 +155,7 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             if (op.type === Token.Characters) {
               return new GasArray(val.inner.split('').map((e) => new GasString(e)))
             }
-            return new GasArray(val.inner.split('\n').map((e) => new GasString(e)))
+            return new GasArray(val.inner.split(/\r?\n/).map((e) => new GasString(e)))
           case Token.Unique: {
             if (!val.is(GasArray)) {
               pitchDiagnostic(`Ornament "${op.lexeme}" must be applied to an array`, node)

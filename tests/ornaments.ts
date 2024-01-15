@@ -87,6 +87,7 @@ test('string lines', () => {
   assert.equal(evaluate('"hello internet\ngood times":lines'), ['hello internet', 'good times'])
   assert.equal(evaluate('"hello internet\n\ngood times":lines'), ['hello internet', '', 'good times'])
   assert.equal(evaluate('"\nhello internet\ngood times\n\n":lines'), ['', 'hello internet', 'good times', '', ''])
+  assert.equal(evaluate('"\r\nhello internet\r\ngood times\r\n\r\n":lines'), ['', 'hello internet', 'good times', '', ''])
 })
 test('string characters', () => {
   assert.equal(evaluate('"hello":characters'), ['h','e','l','l','o'])
