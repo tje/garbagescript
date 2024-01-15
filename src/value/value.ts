@@ -34,6 +34,9 @@ export abstract class GasValue<T = unknown> {
   abstract toDebug (): string
 
   static from (value: any, path: GasValuePath = []) {
+    if (this.isGasValue(value)) {
+      return value
+    }
     if (typeof value === 'number') {
       return new GasNumber(value, path)
     }
