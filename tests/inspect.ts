@@ -32,7 +32,8 @@ positioning: {
     'let $x = \x001 or (2 or 3)??',
     '\0let $x = 1 or (2 or 3)???',
     'let $x = if true { "a" } else \0{ "b" }?',
-    '\0let $x = if true { "a" } else { "b" }??',
+    'let $x = \0if true { "a" } else { "b" }??',
+    '\0let $x = if true { "a" } else { "b" }???',
 
     '\0!true?',
     '!\0$things?',
