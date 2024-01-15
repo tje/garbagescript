@@ -14,6 +14,12 @@ type GasValueConstructor =
   | typeof GasStruct
   | typeof GasUnknown
 
+const enum GasValueOrd {
+  Less = -1,
+  Equal = 0,
+  Greater = 1,
+}
+
 type GasValuePath = (string | number)[]
 export abstract class GasValue<T = unknown> {
   protected _type: string = 'unknown'
@@ -78,6 +84,57 @@ export abstract class GasValue<T = unknown> {
   get inner (): T {
     return this._value
   }
+
+
+  public add <T extends GasValue> (other: T): GasValue {
+    const a = this.parse()
+    const b = other.parse()
+    if (a !== undefined && b !== undefined) {
+      return new GasNumber(a + b)
+    }
+    return new GasUnknown(undefined)
+  }
+  public sub <T extends GasValue> (other: T): GasValue {
+    const a = this.parse()
+    const b = other.parse()
+    if (a !== undefined && b !== undefined) {
+      return new GasNumber(a - b)
+    }
+    return new GasUnknown(undefined)
+  }
+  public mul <T extends GasValue> (other: T): GasValue {
+    const a = this.parse()
+    const b = other.parse()
+    if (a !== undefined && b !== undefined) {
+      return new GasNumber(a * b)
+    }
+    return new GasUnknown(undefined)
+  }
+  public div <T extends GasValue> (other: T): GasValue {
+    const a = this.parse()
+    const b = other.parse()
+    if (a !== undefined && b !== undefined) {
+      return new GasNumber(a / b)
+    }
+    return new GasUnknown(undefined)
+  }
+  public mod <T extends GasValue> (other: T): GasValue {
+    const a = this.parse()
+    const b = other.parse()
+    if (a !== undefined && b !== undefined) {
+      return new GasNumber(a % b)
+    }
+    return new GasUnknown(undefined)
+  }
+  public parse (): number | undefined {
+    return undefined
+  }
+  public cmp <T extends GasValue> (other: T): GasValueOrd | undefined {
+    return undefined
+  }
+  public eq <T extends GasValue> (other: T): boolean {
+    return this.cmp(other) === GasValueOrd.Equal
+  }
 }
 
 export class GasUnknown extends GasValue<unknown> {
@@ -89,6 +146,12 @@ export class GasUnknown extends GasValue<unknown> {
   }
   public toDisplay (): string {
     return String(this._value)
+  }
+  public cmp () {
+    return GasValueOrd.Equal
+  }
+  public eq () {
+    return false
   }
 }
 
@@ -103,6 +166,43 @@ export class GasString extends GasValue<string> {
   public toDisplay (): string {
     return this.unwrap()
   }
+
+  public add <T extends GasValue> (other: T): GasValue {
+    if (other.is(GasString)) {
+      return new GasString(this.inner + other.inner)
+    }
+    if (other.is(GasNumber)) {
+      const v = this.parse()
+      if (v !== undefined) {
+        return new GasNumber(v + other.inner)
+      }
+    }
+    return new GasString(this.inner + other.unwrap())
+  }
+  public cmp <T extends GasValue> (other: T): GasValueOrd | undefined {
+    if (other.is(GasString)) {
+      if (this.inner === other.inner) {
+        return GasValueOrd.Equal
+      }
+      return this.inner > other.inner
+        ? GasValueOrd.Greater
+        : GasValueOrd.Less
+    }
+    return undefined
+  }
+  public eq <T extends GasValue> (other: T): boolean {
+    if (other.is(GasString)) {
+      return other.inner === this.inner
+    }
+    return false
+  }
+  public parse(): number | undefined {
+    const v = parseFloat(this.inner)
+    if (!isNaN(v)) {
+      return v
+    }
+    return undefined
+  }
 }
 
 export class GasNumber extends GasValue<number> {
@@ -116,6 +216,65 @@ export class GasNumber extends GasValue<number> {
   public toDisplay (): string {
     return this.inner.toString()
   }
+
+  public add <T extends GasValue> (other: T): GasValue {
+    const v = other.parse()
+    if (v !== undefined) {
+      return new GasNumber(this.inner + v)
+    }
+    return super.add(other)
+  }
+  public sub <T extends GasValue> (other: T): GasValue {
+    const v = other.parse()
+    if (v !== undefined) {
+      return new GasNumber(this.inner - v)
+    }
+    return super.sub(other)
+  }
+  public mul <T extends GasValue> (other: T): GasValue {
+    const v = other.parse()
+    if (v !== undefined) {
+      return new GasNumber(this.inner * v)
+    }
+    return super.mul(other)
+  }
+  public div <T extends GasValue> (other: T): GasValue {
+    const v = other.parse()
+    if (v !== undefined) {
+      return new GasNumber(this.inner / v)
+    }
+    return super.div(other)
+  }
+  public mod <T extends GasValue> (other: T): GasValue {
+    const v = other.parse()
+    if (v !== undefined) {
+      return new GasNumber(this.inner % v)
+    }
+    return super.mod(other)
+  }
+
+  public cmp <T extends GasValue> (other: T): GasValueOrd | undefined {
+    const v = other.parse()
+    if (v !== undefined) {
+      if (this.inner === v) {
+        return GasValueOrd.Equal
+      }
+      return this.inner > v
+        ? GasValueOrd.Greater
+        : GasValueOrd.Less
+    }
+    return undefined
+  }
+  public eq <T extends GasValue> (other: T): boolean {
+    const v = other.parse()
+    if (v !== undefined) {
+      return v === this.inner
+    }
+    return false
+  }
+  public parse(): number | undefined {
+    return this.inner
+  }
 }
 
 export class GasBoolean extends GasValue<boolean> {
@@ -128,6 +287,21 @@ export class GasBoolean extends GasValue<boolean> {
   }
   public toDisplay (): string {
     return this.inner ? 'true' : 'false'
+  }
+
+  public cmp <T extends GasValue> (other: T): GasValueOrd | undefined {
+    if (other.is(GasBoolean)) {
+      if (other.inner === this.inner) {
+        return GasValueOrd.Equal
+      }
+      return this.inner === true
+        ? GasValueOrd.Greater
+        : GasValueOrd.Less
+    }
+    return undefined
+  }
+  public eq <T extends GasValue> (other: T): boolean {
+    return this.inner === other.inner
   }
 }
 
@@ -149,6 +323,20 @@ export class GasArray<T extends GasValue> extends GasValue<T[]> {
   }
   public toDisplay (): string {
     return this.inner.map((e) => e.toDisplay()).join(', ')
+  }
+
+  public add <O extends GasValue> (other: O): GasValue {
+    return new GasArray([
+      ...this.unwrap(),
+      ...[ other.unwrap() ].flat(1),
+    ].map((e) => GasValue.from(e)))
+  }
+  public sub <O extends GasValue> (other: O): GasValue {
+    const o = [other.unwrap()].flat(1)
+    return new GasArray(
+      this.unwrap().filter((e) => !o.includes(e))
+        .map((e) => GasValue.from(e)),
+    )
   }
 }
 
@@ -184,6 +372,43 @@ export class GasDate extends GasValue<Date> {
   }
   public toDisplay (): string {
     return this.inner.toLocaleString()
+  }
+
+  public add <T extends GasValue> (other: T): GasValue {
+    if (other.is(GasDuration)) {
+      return new GasDate(
+        new Date(this.unwrap().getTime() + (other.unwrap() as number)),
+      )
+    }
+    return super.add(other)
+  }
+
+  public sub <T extends GasValue> (other: T): GasValue {
+    if (other.is(GasDuration)) {
+      return new GasDate(
+        new Date(this.unwrap().getTime() - (other.unwrap() as number)),
+      )
+    }
+    if (other.is(GasDate)) {
+      return new GasDuration(
+        (this.inner.getTime() - other.inner.getTime()) / 1_000,
+        DurationUnit.Second,
+      )
+    }
+    return super.sub(other)
+  }
+
+  public cmp <T extends GasValue> (other: T): GasValueOrd | undefined {
+    if (other.is(GasDate)) {
+      const a = this.inner.getTime()
+      const b = other.inner.getTime()
+      if (a === b) {
+        return GasValueOrd.Equal
+      }
+      return a > b
+        ? GasValueOrd.Greater
+        : GasValueOrd.Less
+    }
   }
 }
 
@@ -264,5 +489,65 @@ export class GasDuration extends GasValue<number> {
       return `${Math.round((v / MINUTE) * 10) / 10} minute(s)`
     }
     return `${Math.round((v / SECOND) * 10) / 10} second(s)`
+  }
+
+  public add <T extends GasValue> (other: T): GasValue {
+    if (other.is(GasDuration)) {
+      return new GasDuration(
+        (this.unwrap() + (other.unwrap() as number)) / 1_000,
+        DurationUnit.Second,
+      )
+    }
+    return super.add(other)
+  }
+  public sub <T extends GasValue> (other: T): GasValue {
+    if (other.is(GasDuration)) {
+      return new GasDuration(
+        (this.unwrap() - (other.unwrap() as number)) / 1_000,
+        DurationUnit.Second,
+      )
+    }
+    return super.sub(other)
+  }
+  public mul <T extends GasValue> (other: T): GasValue {
+    if (other.is(GasNumber)) {
+      return new GasDuration(
+        this.inner * (other.unwrap() as number),
+        this.unit,
+      )
+    }
+    return super.mul(other)
+  }
+  public div <T extends GasValue> (other: T): GasValue {
+    if (other.is(GasNumber)) {
+      return new GasDuration(
+        this.inner / (other.unwrap() as number),
+        this.unit,
+      )
+    }
+    return super.div(other)
+  }
+  public mod <T extends GasValue> (other: T): GasValue {
+    if (other.is(GasNumber)) {
+      return new GasDuration(
+        this.inner % (other.unwrap() as number),
+        this.unit,
+      )
+    }
+    return super.mod(other)
+  }
+
+  public cmp <T extends GasValue> (other: T): GasValueOrd | undefined {
+    if (other.is(GasDuration)) {
+      const a = this.unwrap()
+      const b = other.unwrap() as number
+      if (a === b) {
+        return GasValueOrd.Equal
+      }
+      return a > b
+        ? GasValueOrd.Greater
+        : GasValueOrd.Less
+    }
+    return undefined
   }
 }

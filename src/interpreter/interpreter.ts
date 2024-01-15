@@ -278,8 +278,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         if (a.is(GasDate) || b.is(GasDate)) {
           wrap = (n: any) => new GasDate(new Date(n))
         }
-        const left = (a.unwrap() as any).valueOf()
-        const right = (b.unwrap() as any).valueOf()
+        const left = (a.unwrap() as any)?.valueOf()
+        const right = (b.unwrap() as any)?.valueOf()
 
         // Type mismatch
         switch (op.type) {
@@ -329,45 +329,29 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         }
 
         switch (op.type) {
-          case Token.Plus:
-            if (Array.isArray(left)) {
-              return new GasArray([ ...left.slice(), ...[right].flat(1) ].map((e) => GasValue.from(e)))
-            }
-            if (a.is(GasString) || b.is(GasString)) {
-              return new GasString(a.toDisplay() + b.toDisplay())
-            }
-            if (a.is(GasDuration) && b.is(GasDuration)) {
-              return new GasDuration((a.unwrap() + b.unwrap()) / 1_000, DurationUnit.Second)
-            }
-            return wrap(left + right)
-          case Token.Minus:
-            if (a.is(GasDate) && b.is(GasDate)) {
-              const diff = Math.round((a.inner.getTime() - b.inner.getTime()) / 1_000)
-              return new GasDuration(diff, DurationUnit.Second)
-            }
-            if (a.is(GasDuration) && b.is(GasDuration)) {
-              return new GasDuration((a.unwrap() - b.unwrap()) / 1_000, DurationUnit.Second)
-            }
-            if (Array.isArray(left)) {
-              const other = [right].flat(1)
-              return new GasArray(left.filter((e) => !other.includes(e)).map((e) => GasValue.from(e)))
-            }
-            return wrap(left - right)
-          case Token.Multiply: return new GasNumber(left * right)
-          case Token.Divide: return new GasNumber(left / right)
-          case Token.Greater: return new GasBoolean(left > right)
-          case Token.GreaterEqual: return new GasBoolean(left >= right)
-          case Token.Less: return new GasBoolean(left < right)
-          case Token.LessEqual: return new GasBoolean(left <= right)
-          case Token.Equals: return new GasBoolean(left == right)
-          case Token.NotEquals: return new GasBoolean(left != right)
+          case Token.Plus: return a.add(b)
+          case Token.Minus: return a.sub(b)
+          case Token.Multiply: return a.mul(b)
+          case Token.Divide: return a.div(b)
+          case Token.Greater: return new GasBoolean(a.cmp(b) === 1)
+          case Token.GreaterEqual: {
+            const r = a.cmp(b)
+            return new GasBoolean(typeof r !== 'undefined' && r >= 0)
+          }
+          case Token.Less: return new GasBoolean(a.cmp(b) === -1)
+          case Token.LessEqual: {
+            const r = a.cmp(b)
+            return new GasBoolean(typeof r !== 'undefined' && r <= 0)
+          }
+          case Token.Equals: return new GasBoolean(a.eq(b))
+          case Token.NotEquals: return new GasBoolean(!a.eq(b))
           case Token.Includes: return new GasBoolean(left?.includes?.(right))
           case Token.Matches:
             return new GasBoolean(
               a.is(GasString) && b.is(GasString) && left.toLowerCase().includes(right.toLowerCase())
             )
           case Token.Of: return new GasBoolean(Array.isArray(right) && right.includes(left))
-          case Token.Modulo: return new GasNumber(left % right)
+          case Token.Modulo: return a.mod(b)
         }
         pitchDiagnostic(`Unknown binary operator: "${op.lexeme}"`, node)
         return new GasUnknown(undefined)
