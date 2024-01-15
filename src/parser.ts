@@ -231,6 +231,7 @@ class Parser {
       value: [expr, exprThen, exprElse],
       start,
       end: exprElse?.end ?? exprThen.end,
+      inspect: this.claimInspect(),
     }
   }
   private parseDeclareStatement (): IASTNode {
