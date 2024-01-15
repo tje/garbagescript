@@ -3,6 +3,7 @@ import { createStack } from './stack.js'
 import { Token } from '../tokens.js'
 import { DurationUnit, GasArray, GasBoolean, GasDate, GasDuration, GasNumber, GasString, GasStruct, GasUnknown, GasValue } from '../value/value.js'
 import { DiagnosticSeverity, EvaluationResults, InterpreterDiagnostic, RejectMessage, ValidationResults } from './results.js'
+import { GlobalOrnaments } from '../index.js'
 
 class StopEarly extends Error {}
 class SkipSignal extends Error {}
@@ -242,6 +243,15 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             return GasValue.from(fn(val.unwrap()))
           } catch (err: any) {
             pitchDiagnostic(`Error evaluating custom hoisted ornament: ${err.toString()}`, node)
+            return val
+          }
+        }
+        if (GlobalOrnaments.get(op.lexeme)) {
+          try {
+            const fn = GlobalOrnaments.get(op.lexeme)!?.fn
+            return GasValue.from(fn(val.unwrap()))
+          } catch (err: any) {
+            pitchDiagnostic(`Error evaluating custom global ornament: ${err.toString()}`, node)
             return val
           }
         }
