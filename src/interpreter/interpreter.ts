@@ -336,11 +336,17 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             if (a.is(GasString) || b.is(GasString)) {
               return new GasString(a.toDisplay() + b.toDisplay())
             }
+            if (a.is(GasDuration) && b.is(GasDuration)) {
+              return new GasDuration((a.unwrap() + b.unwrap()) / 1_000, DurationUnit.Second)
+            }
             return wrap(left + right)
           case Token.Minus:
             if (a.is(GasDate) && b.is(GasDate)) {
               const diff = Math.round((a.inner.getTime() - b.inner.getTime()) / 1_000)
               return new GasDuration(diff, DurationUnit.Second)
+            }
+            if (a.is(GasDuration) && b.is(GasDuration)) {
+              return new GasDuration((a.unwrap() - b.unwrap()) / 1_000, DurationUnit.Second)
             }
             if (Array.isArray(left)) {
               const other = [right].flat(1)
