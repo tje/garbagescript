@@ -1,3 +1,5 @@
+import { addMonthsToDate } from './date_utils'
+
 type Unwrapped<T> =
     T extends GasValue ? Unwrapped<ReturnType<T['unwrap']>>
   : T extends Array<infer I> ? Unwrapped<I>[]
@@ -188,6 +190,18 @@ export class GasDate extends GasValue<Date> {
   public toDisplay (): string {
     return this.inner.toLocaleString()
   }
+
+  public addDuration (other: GasDuration) {
+    if (other.unit !== DurationUnit.Month) {
+      return new GasDate(new Date(this.inner.getTime() + other.unwrap()))
+    }
+    const date = addMonthsToDate(this.inner, other.inner)
+    return new GasDate(date)
+  }
+
+  public subtractDuration (other: GasDuration) {
+    return this.addDuration(new GasDuration(other.inner * -1, other.unit))
+  }
 }
 
 
@@ -212,7 +226,7 @@ const YEAR = 365 * 24 * 60 * 60 * 1_000
 
 export class GasDuration extends GasValue<number> {
   protected _type = 'duration'
-  constructor (protected _value: number, private unit: DurationUnit, protected _path: GasValuePath = []) {
+  constructor (protected _value: number, readonly unit: DurationUnit, protected _path: GasValuePath = []) {
     super(_value, _path)
   }
 

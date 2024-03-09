@@ -349,6 +349,9 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             if (a.is(GasDuration) && b.is(GasDuration)) {
               return new GasDuration((a.unwrap() + b.unwrap()) / 1_000, DurationUnit.Second)
             }
+            if (a.is(GasDate) && b.is(GasDuration)) {
+              return a.addDuration(b)
+            }
             return wrap(left + right)
           case Token.Minus:
             if (a.is(GasDate) && b.is(GasDate)) {
@@ -357,6 +360,9 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
             }
             if (a.is(GasDuration) && b.is(GasDuration)) {
               return new GasDuration((a.unwrap() - b.unwrap()) / 1_000, DurationUnit.Second)
+            }
+            if (a.is(GasDate) && b.is(GasDuration)) {
+              return a.subtractDuration(b)
             }
             if (Array.isArray(left)) {
               const other = [right].flat(1)
