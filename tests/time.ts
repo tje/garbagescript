@@ -139,8 +139,8 @@ test('unit math with variables', () => {
 })
 
 test('date math with variables', () => {
-  assert.is(evaluate('let $n = 2\nnow + $n days == now + 2 days'), true)
-  assert.is(evaluate('let $n = 2\nnow - $n days == now - 2 days'), true)
+  assert.is(evaluate('let $n = 2\nlet $t = now\n$t + $n days == $t + 2 days'), true)
+  assert.is(evaluate('let $n = 2\nlet $t = now\n$t - $n days == $t - 2 days'), true)
 })
 
 test('date math with month adjustments', () => {
