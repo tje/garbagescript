@@ -143,6 +143,24 @@ test('date math with variables', () => {
   assert.is(evaluate('let $n = 2\nnow - $n days == now - 2 days'), true)
 })
 
+test('date math with month adjustments', () => {
+  assert.is(evaluate('let $n = $date + 1 month $n:month', { $date: new Date(2024, 2, 1) }), 4)
+  assert.is(evaluate('let $n = $date + 1 month $n:month', { $date: new Date(2024, 2, 31) }), 4)
+  assert.is(evaluate('let $n = $date + 1 month $n:day', { $date: new Date(2024, 2, 31) }), 30)
+
+  assert.is(evaluate('let $n = $date - 1 month $n:month', { $date: new Date(2024, 3, 30) }), 3)
+  assert.is(evaluate('let $n = $date - 1 month $n:day', { $date: new Date(2024, 3, 30) }), 30)
+
+  assert.is(evaluate('let $n = $date - 1 month $n:month', { $date: new Date(2024, 2, 31) }), 2)
+  assert.is(evaluate('let $n = $date - 1 month $n:day', { $date: new Date(2024, 2, 31) }), 29)
+
+  assert.is(evaluate('let $n = $date - 1 month $n:month', { $date: new Date(2024, 2, 1) }), 2)
+  assert.is(evaluate('let $n = $date - 1 month $n:day', { $date: new Date(2024, 2, 1) }), 1)
+
+  assert.is(evaluate('let $n = $date + 12 months $n:month', { $date: new Date(2024, 1, 29) }), 2)
+  assert.is(evaluate('let $n = $date + 12 months $n:day', { $date: new Date(2024, 1, 29) }), 28)
+})
+
 test('dates', () => {
   assert.is(evaluate('1 day ago < now'), true)
   assert.is(evaluate('1 day ahead > now'), true)
