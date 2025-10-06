@@ -292,6 +292,7 @@ export const extractDeclarations = (script: string) => {
         return r.alias === p
           && r.from <= ref.position
           && r.to >= ref.position
+          && r !== ref
       })
       if (!other) {
         break
