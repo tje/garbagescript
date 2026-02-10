@@ -288,8 +288,8 @@ export const createInterpreter = (options: IInterpreterOptions = {}) => {
         if (a.is(GasDate) || b.is(GasDate)) {
           wrap = (n: any) => new GasDate(new Date(n))
         }
-        const left = (a.unwrap() as any).valueOf()
-        const right = (b.unwrap() as any).valueOf()
+        const left = (a.unwrap() as any)?.valueOf?.()
+        const right = (b.unwrap() as any)?.valueOf?.()
 
         // Type mismatch
         switch (op.type) {
